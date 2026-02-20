@@ -1,5 +1,5 @@
 [phases.build]
 cmds = ["npm install", "npm run build"]
 
-[staticSite]
-outputDir = "dist"
+[start]
+cmd = "npm run start"
