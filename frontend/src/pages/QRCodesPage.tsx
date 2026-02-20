@@ -37,6 +37,10 @@ export default function QRCodesPage() {
     setQrCodes((prev) => prev.filter((q) => q.id !== id))
   }
 
+  const handleUpdated = (updated: QRCode) => {
+    setQrCodes((prev) => prev.map((q) => (q.id === updated.id ? updated : q)))
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -76,7 +80,7 @@ export default function QRCodesPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {qrCodes.map((qr) => (
-              <QRCodeCard key={qr.id} qr={qr} onDeleted={handleDeleted} />
+              <QRCodeCard key={qr.id} qr={qr} onDeleted={handleDeleted} onUpdated={handleUpdated} />
             ))}
           </div>
         )}

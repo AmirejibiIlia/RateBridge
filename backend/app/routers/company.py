@@ -5,8 +5,8 @@ from app.database import get_db
 from app.core.dependencies import require_company_user
 from app.models.user import User
 from app.schemas.company import CompanyStats
-from app.schemas.qr_code import QRCodeCreate, QRCodeOut
-from app.schemas.feedback import FeedbackOut, FeedbackStats
+from app.schemas.qr_code import QRCodeCreate, QRCodeUpdate, QRCodeOut
+from app.schemas.feedback import FeedbackOut, FeedbackStats, FeedbackHighlights
 from app.services.company_service import CompanyService
 from app.services.qr_service import QRService
 from app.services.feedback_service import FeedbackService
@@ -34,6 +34,11 @@ def feedback_stats(current_user: User = Depends(require_company_user), db: Sessi
     return FeedbackService(db).get_stats(current_user.company_id)
 
 
+@router.get("/feedback/highlights", response_model=FeedbackHighlights)
+def feedback_highlights(current_user: User = Depends(require_company_user), db: Session = Depends(get_db)):
+    return FeedbackService(db).get_highlights(current_user.company_id)
+
+
 @router.get("/qr-codes", response_model=list[QRCodeOut])
 def list_qr_codes(current_user: User = Depends(require_company_user), db: Session = Depends(get_db)):
     return QRService(db).list(current_user.company_id)
@@ -55,6 +60,25 @@ def get_qr_image(
     db: Session = Depends(get_db),
 ):
     return QRService(db).get_image(current_user.company_id, qr_id)
+
+
+@router.patch("/qr-codes/{qr_id}", response_model=QRCodeOut)
+def update_qr_code(
+    qr_id: str,
+    data: QRCodeUpdate,
+    current_user: User = Depends(require_company_user),
+    db: Session = Depends(get_db),
+):
+    return QRService(db).update_label(current_user.company_id, qr_id, data)
+
+
+@router.get("/qr-codes/{qr_id}/stats", response_model=FeedbackStats)
+def qr_code_stats(
+    qr_id: str,
+    current_user: User = Depends(require_company_user),
+    db: Session = Depends(get_db),
+):
+    return FeedbackService(db).get_qr_stats(qr_id)
 
 
 @router.delete("/qr-codes/{qr_id}", status_code=204)

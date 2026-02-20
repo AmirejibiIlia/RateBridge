@@ -46,6 +46,11 @@ export interface FeedbackStats {
   distribution: Record<string, number>
 }
 
+export interface FeedbackHighlights {
+  top3: Feedback[]
+  worst3: Feedback[]
+}
+
 export interface QRCodePublicInfo {
   uuid: string
   label: string

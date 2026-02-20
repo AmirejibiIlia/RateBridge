@@ -19,5 +19,14 @@ export const createQRCode = (label: string) =>
 export const getQRCodeImage = (id: string) =>
   client.get<QRCode>(`/api/company/qr-codes/${id}/image`).then((r) => r.data)
 
+export const updateQRCode = (id: string, label: string) =>
+  client.patch<QRCode>(`/api/company/qr-codes/${id}`, { label }).then((r) => r.data)
+
+export const getQRCodeStats = (id: string) =>
+  client.get<import('../types').FeedbackStats>(`/api/company/qr-codes/${id}/stats`).then((r) => r.data)
+
+export const getFeedbackHighlights = () =>
+  client.get<import('../types').FeedbackHighlights>('/api/company/feedback/highlights').then((r) => r.data)
+
 export const deleteQRCode = (id: string) =>
   client.delete(`/api/company/qr-codes/${id}`)

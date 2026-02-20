@@ -26,6 +26,11 @@ class FeedbackStats(BaseModel):
     distribution: dict[str, int]
 
 
+class FeedbackHighlights(BaseModel):
+    top3: list[FeedbackOut]
+    worst3: list[FeedbackOut]
+
+
 class QRCodePublicInfo(BaseModel):
     uuid: str
     label: str

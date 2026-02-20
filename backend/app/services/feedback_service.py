@@ -6,7 +6,7 @@ from sqlalchemy import func
 
 from app.models.qr_code import QRCode
 from app.models.feedback import Feedback
-from app.schemas.feedback import FeedbackSubmit, FeedbackOut, FeedbackStats, QRCodePublicInfo
+from app.schemas.feedback import FeedbackSubmit, FeedbackOut, FeedbackStats, FeedbackHighlights, QRCodePublicInfo
 
 
 class FeedbackService:
@@ -76,6 +76,49 @@ class FeedbackService:
             total=total,
             average_rating=round(float(avg), 2) if avg else None,
             distribution=distribution,
+        )
+
+    def get_qr_stats(self, qr_code_id: str) -> FeedbackStats:
+        total = self.db.query(func.count(Feedback.id)).filter(
+            Feedback.qr_code_id == qr_code_id
+        ).scalar() or 0
+
+        avg = self.db.query(func.avg(Feedback.rating)).filter(
+            Feedback.qr_code_id == qr_code_id
+        ).scalar()
+
+        distribution = {}
+        for i in range(1, 11):
+            count = self.db.query(func.count(Feedback.id)).filter(
+                Feedback.qr_code_id == qr_code_id,
+                Feedback.rating == i,
+            ).scalar() or 0
+            distribution[str(i)] = count
+
+        return FeedbackStats(
+            total=total,
+            average_rating=round(float(avg), 2) if avg else None,
+            distribution=distribution,
+        )
+
+    def get_highlights(self, company_id: str) -> FeedbackHighlights:
+        top3 = (
+            self.db.query(Feedback)
+            .filter(Feedback.company_id == company_id)
+            .order_by(Feedback.rating.desc(), Feedback.created_at.desc())
+            .limit(3)
+            .all()
+        )
+        worst3 = (
+            self.db.query(Feedback)
+            .filter(Feedback.company_id == company_id)
+            .order_by(Feedback.rating.asc(), Feedback.created_at.desc())
+            .limit(3)
+            .all()
+        )
+        return FeedbackHighlights(
+            top3=[FeedbackOut.model_validate(f) for f in top3],
+            worst3=[FeedbackOut.model_validate(f) for f in worst3],
         )
 
     def list_all(self, page: int = 1, page_size: int = 50) -> list[FeedbackOut]:

@@ -6,6 +6,10 @@ class QRCodeCreate(BaseModel):
     label: str
 
 
+class QRCodeUpdate(BaseModel):
+    label: str
+
+
 class QRCodeOut(BaseModel):
     id: str
     company_id: str

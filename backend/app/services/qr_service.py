@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.models.qr_code import QRCode
-from app.schemas.qr_code import QRCodeCreate, QRCodeOut
+from app.schemas.qr_code import QRCodeCreate, QRCodeUpdate, QRCodeOut
 
 
 def _generate_qr_image(uuid: str) -> str:
@@ -37,7 +37,25 @@ class QRService:
 
     def list(self, company_id: str) -> list[QRCodeOut]:
         qrs = self.db.query(QRCode).filter(QRCode.company_id == company_id).all()
-        return [QRCodeOut.model_validate(q) for q in qrs]
+        result = []
+        for q in qrs:
+            out = QRCodeOut.model_validate(q)
+            out.image_base64 = _generate_qr_image(q.uuid)
+            result.append(out)
+        return result
+
+    def update_label(self, company_id: str, qr_id: str, data: QRCodeUpdate) -> QRCodeOut:
+        qr = self.db.query(QRCode).filter(
+            QRCode.id == qr_id, QRCode.company_id == company_id
+        ).first()
+        if not qr:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="QR code not found")
+        qr.label = data.label
+        self.db.commit()
+        self.db.refresh(qr)
+        out = QRCodeOut.model_validate(qr)
+        out.image_base64 = _generate_qr_image(qr.uuid)
+        return out
 
     def get_image(self, company_id: str, qr_id: str) -> QRCodeOut:
         qr = self.db.query(QRCode).filter(
