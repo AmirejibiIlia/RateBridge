@@ -126,15 +126,17 @@ class FeedbackService:
             worst3=[FeedbackOut.model_validate(f) for f in worst3],
         )
 
-    def get_timeline(self, company_id: str) -> FeedbackTimeline:
+    def get_timeline(self, company_id: str, qr_code_id: str | None = None) -> FeedbackTimeline:
         now = datetime.now(timezone.utc)
         since = now - timedelta(days=30)
 
-        feedbacks = (
-            self.db.query(Feedback)
-            .filter(Feedback.company_id == company_id, Feedback.created_at >= since)
-            .all()
+        q = self.db.query(Feedback).filter(
+            Feedback.company_id == company_id,
+            Feedback.created_at >= since,
         )
+        if qr_code_id:
+            q = q.filter(Feedback.qr_code_id == qr_code_id)
+        feedbacks = q.all()
 
         # --- Daily: last 30 days ---
         daily_map: dict[str, dict[int, int]] = {}

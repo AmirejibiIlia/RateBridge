@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Layout from '../components/Layout'
 import StatsCard from '../components/StatsCard'
 import FeedbackChart from '../components/FeedbackChart'
 import TimelineCharts from '../components/TimelineCharts'
-import { getDashboard, getFeedbackStats, getFeedbackHighlights, getFeedbackTimeline, getQRCodes, getQRCodeStats } from '../api/company'
+import { getDashboard, getFeedbackHighlights, getFeedbackTimeline, getQRCodes, getQRCodeStats } from '../api/company'
 import type { CompanyStats, FeedbackStats, FeedbackHighlights, FeedbackTimeline, QRCode } from '../types'
 
 const RATING_COLORS: Record<number, string> = {
@@ -36,19 +36,21 @@ function FeedbackRow({ rating, comment, date }: { rating: number; comment: strin
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<CompanyStats | null>(null)
-  const [_feedbackStats, setFeedbackStats] = useState<FeedbackStats | null>(null)
   const [highlights, setHighlights] = useState<FeedbackHighlights | null>(null)
   const [timeline, setTimeline] = useState<FeedbackTimeline | null>(null)
+  const [timelineLoading, setTimelineLoading] = useState(false)
+  const [qrList, setQrList] = useState<QRCode[]>([])
+  const [selectedQrId, setSelectedQrId] = useState<string | null>(null)
   const [qrSections, setQrSections] = useState<QRWithStats[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([getDashboard(), getFeedbackStats(), getFeedbackHighlights(), getFeedbackTimeline(), getQRCodes()])
-      .then(async ([s, fs, hl, tl, qrs]) => {
+    Promise.all([getDashboard(), getFeedbackHighlights(), getFeedbackTimeline(), getQRCodes()])
+      .then(async ([s, hl, tl, qrs]) => {
         setStats(s)
-        setFeedbackStats(fs)
         setHighlights(hl)
         setTimeline(tl)
+        setQrList(qrs)
         const sections = await Promise.all(
           qrs.map(async (qr) => {
             const qrStats = await getQRCodeStats(qr.id)
@@ -60,6 +62,14 @@ export default function DashboardPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  const handleQrFilter = useCallback((qrId: string | null) => {
+    setSelectedQrId(qrId)
+    setTimelineLoading(true)
+    getFeedbackTimeline(qrId ?? undefined)
+      .then(setTimeline)
+      .finally(() => setTimelineLoading(false))
+  }, [])
+
   if (loading) {
     return (
       <Layout>
@@ -69,6 +79,8 @@ export default function DashboardPage() {
       </Layout>
     )
   }
+
+  const selectedQrLabel = qrList.find((q) => q.id === selectedQrId)?.label ?? 'All QR Codes'
 
   return (
     <Layout>
@@ -91,7 +103,56 @@ export default function DashboardPage() {
             <StatsCard title="Active QR Codes" value={stats?.active_qr_codes ?? 0} />
           </div>
 
-          {timeline && <TimelineCharts timeline={timeline} />}
+          {/* QR filter + timeline */}
+          {timeline && (
+            <div className="space-y-3">
+              {/* Filter pills */}
+              {qrList.length > 1 && (
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="text-xs font-medium text-gray-500 mr-1">Filter:</span>
+                  <button
+                    onClick={() => handleQrFilter(null)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                      selectedQrId === null
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    All QR Codes
+                  </button>
+                  {qrList.map((qr) => (
+                    <button
+                      key={qr.id}
+                      onClick={() => handleQrFilter(qr.id)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                        selectedQrId === qr.id
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {qr.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="relative">
+                {timelineLoading && (
+                  <div className="absolute inset-0 bg-white/70 rounded-xl flex items-center justify-center z-10">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+                  </div>
+                )}
+                <div>
+                  {selectedQrId && (
+                    <p className="text-sm font-medium text-blue-600 mb-2">
+                      Showing: {selectedQrLabel}
+                    </p>
+                  )}
+                  <TimelineCharts timeline={timeline} />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Top 3 & Worst 3 */}
@@ -99,21 +160,15 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <h3 className="text-base font-semibold text-gray-700 mb-3">🏆 Top Feedback</h3>
-              {highlights.top3.length === 0
-                ? <p className="text-sm text-gray-400">No feedback yet.</p>
-                : highlights.top3.map((fb) => (
-                    <FeedbackRow key={fb.id} rating={fb.rating} comment={fb.comment} date={fb.created_at} />
-                  ))
-              }
+              {highlights.top3.map((fb) => (
+                <FeedbackRow key={fb.id} rating={fb.rating} comment={fb.comment} date={fb.created_at} />
+              ))}
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <h3 className="text-base font-semibold text-gray-700 mb-3">⚠️ Needs Attention</h3>
-              {highlights.worst3.length === 0
-                ? <p className="text-sm text-gray-400">No feedback yet.</p>
-                : highlights.worst3.map((fb) => (
-                    <FeedbackRow key={fb.id} rating={fb.rating} comment={fb.comment} date={fb.created_at} />
-                  ))
-              }
+              {highlights.worst3.map((fb) => (
+                <FeedbackRow key={fb.id} rating={fb.rating} comment={fb.comment} date={fb.created_at} />
+              ))}
             </div>
           </div>
         )}

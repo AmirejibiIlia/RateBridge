@@ -84,7 +84,7 @@ function StackedChart({ data, title }: ChartProps) {
 
 export default function TimelineCharts({ timeline }: { timeline: FeedbackTimeline }) {
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
       <StackedChart data={timeline.daily} title="Daily — Last 30 Days" />
       <StackedChart data={timeline.weekly} title="Weekly — Last 4 Weeks" />
     </div>
