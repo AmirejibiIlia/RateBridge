@@ -80,8 +80,19 @@ const translations = {
     slug: 'Slug',
     avgRating: 'Avg Rating',
     joined: 'Joined',
-    // Language
+    // Admin
+    adminSection: 'Admin',
+    companySettings: 'Company Settings',
+    companyNameLabel: 'Company Name',
+    saveChanges: 'Save Changes',
+    saving: 'Saving...',
+    saved: 'Saved!',
+    changePassword: 'Change Password',
+    newPassword: 'New Password',
+    updatePassword: 'Update Password',
+    passwordUpdated: 'Password updated!',
     language: 'Language',
+    languageSettings: 'Language',
   },
   de: {
     // Nav
@@ -160,8 +171,19 @@ const translations = {
     slug: 'Slug',
     avgRating: 'Ø Bewertung',
     joined: 'Beigetreten',
-    // Language
+    // Admin
+    adminSection: 'Admin',
+    companySettings: 'Unternehmenseinstellungen',
+    companyNameLabel: 'Unternehmensname',
+    saveChanges: 'Änderungen speichern',
+    saving: 'Wird gespeichert...',
+    saved: 'Gespeichert!',
+    changePassword: 'Passwort ändern',
+    newPassword: 'Neues Passwort',
+    updatePassword: 'Passwort aktualisieren',
+    passwordUpdated: 'Passwort aktualisiert!',
     language: 'Sprache',
+    languageSettings: 'Sprache',
   },
 } as const
 

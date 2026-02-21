@@ -2,6 +2,10 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class CompanyUpdate(BaseModel):
+    name: str
+
+
 class CompanyOut(BaseModel):
     id: str
     name: str

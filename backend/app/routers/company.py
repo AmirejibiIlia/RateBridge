@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.dependencies import require_company_user
 from app.models.user import User
-from app.schemas.company import CompanyStats
+from app.schemas.company import CompanyStats, CompanyOut, CompanyUpdate
+from app.models.company import Company
 from app.schemas.qr_code import QRCodeCreate, QRCodeUpdate, QRCodeOut
 from app.schemas.feedback import FeedbackOut, FeedbackStats, FeedbackHighlights, FeedbackTimeline
 from app.services.company_service import CompanyService
@@ -12,6 +13,25 @@ from app.services.qr_service import QRService
 from app.services.feedback_service import FeedbackService
 
 router = APIRouter(prefix="/api/company", tags=["company"])
+
+
+@router.get("/profile", response_model=CompanyOut)
+def get_profile(current_user: User = Depends(require_company_user), db: Session = Depends(get_db)):
+    company = db.query(Company).filter(Company.id == current_user.company_id).first()
+    return CompanyOut.model_validate(company)
+
+
+@router.patch("/profile", response_model=CompanyOut)
+def update_profile(
+    data: CompanyUpdate,
+    current_user: User = Depends(require_company_user),
+    db: Session = Depends(get_db),
+):
+    company = db.query(Company).filter(Company.id == current_user.company_id).first()
+    company.name = data.name
+    db.commit()
+    db.refresh(company)
+    return CompanyOut.model_validate(company)
 
 
 @router.get("/dashboard", response_model=CompanyStats)

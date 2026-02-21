@@ -17,6 +17,10 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class ChangePasswordRequest(BaseModel):
+    new_password: str
+
+
 class UserOut(BaseModel):
     id: str
     email: str
