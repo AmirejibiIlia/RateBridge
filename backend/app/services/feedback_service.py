@@ -58,7 +58,19 @@ class FeedbackService:
             .limit(page_size)
             .all()
         )
-        return [FeedbackOut.model_validate(f) for f in feedbacks]
+        return [
+            FeedbackOut(
+                id=f.id,
+                qr_code_id=f.qr_code_id,
+                company_id=f.company_id,
+                rating=f.rating,
+                comment=f.comment,
+                ip_address=f.ip_address,
+                created_at=f.created_at,
+                qr_label=f.qr_code.label if f.qr_code else None,
+            )
+            for f in feedbacks
+        ]
 
     def get_stats(self, company_id: str) -> FeedbackStats:
         total = self.db.query(func.count(Feedback.id)).filter(

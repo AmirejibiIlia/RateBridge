@@ -72,6 +72,7 @@ const translations = {
     rating: 'Rating',
     comment: 'Comment',
     date: 'Date',
+    qrName: 'QR Name',
     loadMore: 'Load More',
     // Super Admin
     totalCompanies: 'Total Companies',
@@ -163,6 +164,7 @@ const translations = {
     rating: 'Bewertung',
     comment: 'Kommentar',
     date: 'Datum',
+    qrName: 'QR-Name',
     loadMore: 'Mehr laden',
     // Super Admin
     totalCompanies: 'Unternehmen gesamt',
