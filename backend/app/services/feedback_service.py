@@ -240,7 +240,7 @@ Feedback entries:
 Write a short, punchy CEO summary (5-8 sentences max). Group insights by the categories above. Mention specific counts where possible. If a category has no relevant feedback, note it briefly. End with one overall takeaway sentence."""
 
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        model = genai.GenerativeModel("gemini-1.5-flash")
         response = model.generate_content(prompt)
         summary = response.text.strip()
         return FeedbackSummaryResponse(summary=summary, feedback_count=len(feedbacks))
