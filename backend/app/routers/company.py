@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, Query
+import requests as http_requests
 from sqlalchemy.orm import Session
+from app.config import settings
 
 from app.database import get_db
 from app.core.dependencies import require_company_user
@@ -13,6 +15,15 @@ from app.services.qr_service import QRService
 from app.services.feedback_service import FeedbackService
 
 router = APIRouter(prefix="/api/company", tags=["company"])
+
+
+@router.get("/debug/gemini-models")
+def list_gemini_models():
+    r = http_requests.get(
+        "https://generativelanguage.googleapis.com/v1/models",
+        params={"key": settings.GEMINI_API_KEY},
+    )
+    return r.json()
 
 
 @router.get("/profile", response_model=CompanyOut)
