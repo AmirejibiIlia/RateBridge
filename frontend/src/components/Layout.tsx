@@ -21,7 +21,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside className="w-56 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-5 border-b border-gray-200">
-          <span className="text-xl font-bold text-blue-600">RateBridge</span>
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="RateBridge" className="w-8 h-8 rounded-lg" />
+            <span className="text-xl font-bold text-blue-600">RateBridge</span>
+          </div>
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => (
