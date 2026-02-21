@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     SUPERADMIN_EMAIL: str = "superadmin@ratebridge.com"
     SUPERADMIN_PASSWORD: str = "superadmin123"
     FRONTEND_URL: str = "http://localhost:5173"
-    GEMINI_API_KEY: str = ""
+    GROQ_API_KEY: str = ""
 
     class Config:
         env_file = ".env"

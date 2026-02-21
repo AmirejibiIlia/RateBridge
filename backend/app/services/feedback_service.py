@@ -192,8 +192,8 @@ class FeedbackService:
         return FeedbackTimeline(daily=daily, weekly=weekly)
 
     def generate_summary(self, company_id: str, req: FeedbackSummaryRequest) -> FeedbackSummaryResponse:
-        if not settings.GEMINI_API_KEY:
-            raise HTTPException(status_code=503, detail="AI summary is not configured (missing GEMINI_API_KEY)")
+        if not settings.GROQ_API_KEY:
+            raise HTTPException(status_code=503, detail="AI summary is not configured (missing GROQ_API_KEY)")
 
         try:
             date_from = datetime.strptime(req.date_from, "%Y-%m-%d").replace(tzinfo=timezone.utc)
@@ -240,17 +240,18 @@ Feedback entries:
 Write a short, punchy CEO summary (5-8 sentences max). Group insights by the categories above. Mention specific counts where possible. If a category has no relevant feedback, note it briefly. End with one overall takeaway sentence."""
 
         resp = http_requests.post(
-            "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
-            params={"key": settings.GEMINI_API_KEY},
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
             json={
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"maxOutputTokens": 500},
+                "model": "llama-3.3-70b-versatile",
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 500,
             },
             timeout=30,
         )
         if resp.status_code != 200:
             raise HTTPException(status_code=502, detail=f"AI service error: {resp.text}")
-        summary = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+        summary = resp.json()["choices"][0]["message"]["content"].strip()
         return FeedbackSummaryResponse(summary=summary, feedback_count=len(feedbacks))
 
     def list_all(self, page: int = 1, page_size: int = 50) -> list[FeedbackOut]:
