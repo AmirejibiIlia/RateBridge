@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-import google.generativeai as genai
+import requests as http_requests
 
 from app.models.qr_code import QRCode
 from app.models.feedback import Feedback
@@ -239,10 +239,18 @@ Feedback entries:
 
 Write a short, punchy CEO summary (5-8 sentences max). Group insights by the categories above. Mention specific counts where possible. If a category has no relevant feedback, note it briefly. End with one overall takeaway sentence."""
 
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        response = model.generate_content(prompt)
-        summary = response.text.strip()
+        resp = http_requests.post(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+            params={"key": settings.GEMINI_API_KEY},
+            json={
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"maxOutputTokens": 500},
+            },
+            timeout=30,
+        )
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail=f"AI service error: {resp.text}")
+        summary = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
         return FeedbackSummaryResponse(summary=summary, feedback_count=len(feedbacks))
 
     def list_all(self, page: int = 1, page_size: int = 50) -> list[FeedbackOut]:
