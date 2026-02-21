@@ -200,12 +200,33 @@ export default function FeedbackListPage() {
 
             {/* Result */}
             {summaryResult && (
-              <div className="bg-white border border-violet-200 rounded-xl p-5 space-y-2 shadow-sm">
-                <div className="flex items-center justify-between">
+              <div className="bg-white border border-violet-200 rounded-xl p-5 space-y-3 shadow-sm">
+                <div className="flex items-center justify-between mb-1">
                   <h3 className="text-sm font-semibold text-violet-800">{t('summaryTitle')}</h3>
-                  <span className="text-xs text-gray-400">{summaryResult.feedback_count} entries analysed</span>
+                  <span className="text-xs text-gray-400">{summaryResult.feedback_count} responses analysed</span>
                 </div>
-                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{summaryResult.summary}</p>
+                {summaryResult.summary.split(/\n{2,}/).filter(Boolean).map((block, i) => {
+                  const lines = block.split('\n').filter(Boolean)
+                  const header = lines[0].replace(/^\[|\]$/g, '')
+                  const bullets = lines.slice(1)
+                  return (
+                    <div key={i} className="rounded-lg bg-violet-50 border border-violet-100 px-4 py-3">
+                      <p className="text-xs font-bold text-violet-700 uppercase tracking-wider mb-2">{header}</p>
+                      {bullets.length > 0 ? (
+                        <ul className="space-y-1">
+                          {bullets.map((b, j) => (
+                            <li key={j} className="flex gap-2 text-sm text-gray-700">
+                              <span className="text-violet-400 shrink-0">•</span>
+                              <span>{b.replace(/^[•\-]\s*/, '')}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">No mentions</p>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>

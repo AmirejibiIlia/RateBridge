@@ -228,16 +228,27 @@ class FeedbackService:
         categories_str = ", ".join(req.categories) + ", Other"
         feedback_text = "\n".join(lines)
 
-        prompt = f"""You are analyzing customer feedback for a CEO report. Be concise and insightful.
+        prompt = f"""You are a sharp business analyst. Classify the feedback below into the given categories and output a structured report. No intro sentence. No conclusion. No fluff.
 
-Date range: {req.date_from} to {req.date_to}
-Total entries: {len(feedbacks)}
-Categories to classify into: {categories_str}
+PERIOD: {req.date_from} to {req.date_to} | {len(feedbacks)} responses
 
-Feedback entries:
+CATEGORIES: {categories_str}
+
+FEEDBACK:
 {feedback_text}
 
-Write a short, punchy CEO summary (5-8 sentences max). Group insights by the categories above. Mention specific counts where possible. If a category has no relevant feedback, note it briefly. End with one overall takeaway sentence."""
+OUTPUT FORMAT — follow exactly, one block per category:
+
+[CATEGORY NAME]
+• [finding with specific count, e.g. "5 customers praised X" or "2 complaints about Y"]
+• [second finding if applicable]
+
+Rules:
+- Every bullet MUST start with a number (e.g. "3 customers...", "1 complaint...")
+- Max 2 bullets per category
+- If no feedback fits a category, write exactly: "No mentions"
+- Ratings 1–4 = negative, 5–6 = neutral, 7–10 = positive
+- Do NOT add any text outside the category blocks"""
 
         resp = http_requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
