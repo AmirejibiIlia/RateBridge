@@ -64,21 +64,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </nav>
 
       <div className="p-4 border-t border-gray-200 space-y-3">
-        {/* Language toggle */}
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
-          {(['en', 'de'] as const).map((l) => (
-            <button
-              key={l}
-              onClick={() => setLang(l)}
-              className={`flex-1 py-1 text-xs font-semibold rounded-md transition-colors ${
-                lang === l ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {l === 'en' ? '🇬🇧 EN' : '🇩🇪 DE'}
-            </button>
-          ))}
-        </div>
-
         <p className="text-xs text-gray-500 truncate">{user?.email}</p>
         <button
           onClick={handleLogout}
@@ -110,19 +95,37 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile top bar */}
-        <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 sticky top-0 z-10">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-1.5 rounded-lg text-gray-600 hover:bg-gray-100"
-            aria-label="Open menu"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <img src="/logo.png" alt="RateBridge" className="w-7 h-7 rounded-md" />
-          <span className="text-base font-bold text-blue-600">RateBridge</span>
+        {/* Top bar — mobile: hamburger + logo; desktop: language switcher only */}
+        <header className="flex items-center px-4 py-3 bg-white border-b border-gray-200 sticky top-0 z-10">
+          {/* Mobile: hamburger + logo */}
+          <div className="flex items-center gap-3 lg:hidden">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-1.5 rounded-lg text-gray-600 hover:bg-gray-100"
+              aria-label="Open menu"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <img src="/logo.png" alt="RateBridge" className="w-7 h-7 rounded-md" />
+            <span className="text-base font-bold text-blue-600">RateBridge</span>
+          </div>
+
+          {/* Language switcher — always top right */}
+          <div className="ml-auto flex gap-1 bg-gray-100 rounded-lg p-1">
+            {(['en', 'de'] as const).map((l) => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
+                  lang === l ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {l === 'en' ? '🇬🇧 EN' : '🇩🇪 DE'}
+              </button>
+            ))}
+          </div>
         </header>
 
         <main className="flex-1 overflow-auto">
