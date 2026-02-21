@@ -51,6 +51,25 @@ export interface FeedbackHighlights {
   worst3: Feedback[]
 }
 
+export interface TimelineEntry {
+  label: string
+  r1: number
+  r2: number
+  r3: number
+  r4: number
+  r5: number
+  r6: number
+  r7: number
+  r8: number
+  r9: number
+  r10: number
+}
+
+export interface FeedbackTimeline {
+  daily: TimelineEntry[]
+  weekly: TimelineEntry[]
+}
+
 export interface QRCodePublicInfo {
   uuid: string
   label: string

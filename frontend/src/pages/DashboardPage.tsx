@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import StatsCard from '../components/StatsCard'
 import FeedbackChart from '../components/FeedbackChart'
-import { getDashboard, getFeedbackStats, getFeedbackHighlights, getQRCodes, getQRCodeStats } from '../api/company'
-import type { CompanyStats, FeedbackStats, FeedbackHighlights, QRCode } from '../types'
+import TimelineCharts from '../components/TimelineCharts'
+import { getDashboard, getFeedbackStats, getFeedbackHighlights, getFeedbackTimeline, getQRCodes, getQRCodeStats } from '../api/company'
+import type { CompanyStats, FeedbackStats, FeedbackHighlights, FeedbackTimeline, QRCode } from '../types'
 
 const RATING_COLORS: Record<number, string> = {
   1: 'text-red-600', 2: 'text-red-500', 3: 'text-orange-500', 4: 'text-orange-400',
@@ -35,17 +36,19 @@ function FeedbackRow({ rating, comment, date }: { rating: number; comment: strin
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<CompanyStats | null>(null)
-  const [feedbackStats, setFeedbackStats] = useState<FeedbackStats | null>(null)
+  const [_feedbackStats, setFeedbackStats] = useState<FeedbackStats | null>(null)
   const [highlights, setHighlights] = useState<FeedbackHighlights | null>(null)
+  const [timeline, setTimeline] = useState<FeedbackTimeline | null>(null)
   const [qrSections, setQrSections] = useState<QRWithStats[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([getDashboard(), getFeedbackStats(), getFeedbackHighlights(), getQRCodes()])
-      .then(async ([s, fs, hl, qrs]) => {
+    Promise.all([getDashboard(), getFeedbackStats(), getFeedbackHighlights(), getFeedbackTimeline(), getQRCodes()])
+      .then(async ([s, fs, hl, tl, qrs]) => {
         setStats(s)
         setFeedbackStats(fs)
         setHighlights(hl)
+        setTimeline(tl)
         const sections = await Promise.all(
           qrs.map(async (qr) => {
             const qrStats = await getQRCodeStats(qr.id)
@@ -88,9 +91,7 @@ export default function DashboardPage() {
             <StatsCard title="Active QR Codes" value={stats?.active_qr_codes ?? 0} />
           </div>
 
-          {feedbackStats && feedbackStats.total > 0 && (
-            <FeedbackChart distribution={feedbackStats.distribution} />
-          )}
+          {timeline && <TimelineCharts timeline={timeline} />}
         </div>
 
         {/* Top 3 & Worst 3 */}

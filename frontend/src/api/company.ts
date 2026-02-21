@@ -28,5 +28,8 @@ export const getQRCodeStats = (id: string) =>
 export const getFeedbackHighlights = () =>
   client.get<import('../types').FeedbackHighlights>('/api/company/feedback/highlights').then((r) => r.data)
 
+export const getFeedbackTimeline = () =>
+  client.get<import('../types').FeedbackTimeline>('/api/company/feedback/timeline').then((r) => r.data)
+
 export const deleteQRCode = (id: string) =>
   client.delete(`/api/company/qr-codes/${id}`)

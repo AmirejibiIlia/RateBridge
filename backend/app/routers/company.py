@@ -6,7 +6,7 @@ from app.core.dependencies import require_company_user
 from app.models.user import User
 from app.schemas.company import CompanyStats
 from app.schemas.qr_code import QRCodeCreate, QRCodeUpdate, QRCodeOut
-from app.schemas.feedback import FeedbackOut, FeedbackStats, FeedbackHighlights
+from app.schemas.feedback import FeedbackOut, FeedbackStats, FeedbackHighlights, FeedbackTimeline
 from app.services.company_service import CompanyService
 from app.services.qr_service import QRService
 from app.services.feedback_service import FeedbackService
@@ -37,6 +37,11 @@ def feedback_stats(current_user: User = Depends(require_company_user), db: Sessi
 @router.get("/feedback/highlights", response_model=FeedbackHighlights)
 def feedback_highlights(current_user: User = Depends(require_company_user), db: Session = Depends(get_db)):
     return FeedbackService(db).get_highlights(current_user.company_id)
+
+
+@router.get("/feedback/timeline", response_model=FeedbackTimeline)
+def feedback_timeline(current_user: User = Depends(require_company_user), db: Session = Depends(get_db)):
+    return FeedbackService(db).get_timeline(current_user.company_id)
 
 
 @router.get("/qr-codes", response_model=list[QRCodeOut])

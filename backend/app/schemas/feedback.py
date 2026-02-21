@@ -31,6 +31,25 @@ class FeedbackHighlights(BaseModel):
     worst3: list[FeedbackOut]
 
 
+class TimelineEntry(BaseModel):
+    label: str
+    r1: int = 0
+    r2: int = 0
+    r3: int = 0
+    r4: int = 0
+    r5: int = 0
+    r6: int = 0
+    r7: int = 0
+    r8: int = 0
+    r9: int = 0
+    r10: int = 0
+
+
+class FeedbackTimeline(BaseModel):
+    daily: list[TimelineEntry]
+    weekly: list[TimelineEntry]
+
+
 class QRCodePublicInfo(BaseModel):
     uuid: str
     label: str
