@@ -1,6 +1,12 @@
 import client from './client'
 import type { CompanyStats, Feedback, QRCode } from '../types'
 
+export const getProfile = () =>
+  client.get<import('../types').Company>('/api/company/profile').then((r) => r.data)
+
+export const updateProfile = (name: string) =>
+  client.patch<import('../types').Company>('/api/company/profile', { name }).then((r) => r.data)
+
 export const getDashboard = () =>
   client.get<CompanyStats>('/api/company/dashboard').then((r) => r.data)
 

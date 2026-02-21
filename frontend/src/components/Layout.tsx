@@ -5,7 +5,7 @@ import { useLanguage } from '../context/LanguageContext'
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth()
-  const { lang, setLang, t } = useLanguage()
+  const { t } = useLanguage()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -18,6 +18,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { to: '/dashboard', label: t('dashboard') },
     { to: '/qr-codes', label: t('qrCodes') },
     { to: '/feedback-list', label: t('feedback') },
+    { to: '/admin', label: t('adminSection') },
   ]
 
   const SidebarContent = () => (
@@ -95,10 +96,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar — mobile: hamburger + logo; desktop: language switcher only */}
-        <header className="flex items-center px-4 py-3 bg-white border-b border-gray-200 sticky top-0 z-10">
-          {/* Mobile: hamburger + logo */}
-          <div className="flex items-center gap-3 lg:hidden">
+        {/* Top bar — mobile only (hamburger + logo) */}
+        <header className="flex items-center px-4 py-3 bg-white border-b border-gray-200 sticky top-0 z-10 lg:hidden">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
               className="p-1.5 rounded-lg text-gray-600 hover:bg-gray-100"
@@ -110,21 +110,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </button>
             <img src="/logo.png" alt="RateBridge" className="w-7 h-7 rounded-md" />
             <span className="text-base font-bold text-blue-600">RateBridge</span>
-          </div>
-
-          {/* Language switcher — always top right */}
-          <div className="ml-auto flex gap-1 bg-gray-100 rounded-lg p-1">
-            {(['en', 'de'] as const).map((l) => (
-              <button
-                key={l}
-                onClick={() => setLang(l)}
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
-                  lang === l ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {l === 'en' ? '🇬🇧 EN' : '🇩🇪 DE'}
-              </button>
-            ))}
           </div>
         </header>
 
