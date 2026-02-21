@@ -38,6 +38,7 @@ export interface Feedback {
   comment: string | null
   ip_address: string | null
   created_at: string
+  qr_label: string | null
 }
 
 export interface FeedbackStats {

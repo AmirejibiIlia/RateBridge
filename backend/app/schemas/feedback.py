@@ -15,6 +15,7 @@ class FeedbackOut(BaseModel):
     comment: str | None
     ip_address: str | None
     created_at: datetime
+    qr_label: str | None = None
 
     class Config:
         from_attributes = True

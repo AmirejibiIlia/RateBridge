@@ -60,6 +60,7 @@ export default function FeedbackListPage() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('rating')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('qrName')}</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('comment')}</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('date')}</th>
                 </tr>
@@ -71,6 +72,9 @@ export default function FeedbackListPage() {
                       <span className={`text-xl font-bold ${RATING_COLORS[fb.rating] ?? 'text-gray-700'}`}>
                         {fb.rating}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                      {fb.qr_label || <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-4 py-3 text-gray-600 max-w-xs">
                       {fb.comment || <span className="text-gray-300 italic">{t('noComment')}</span>}
