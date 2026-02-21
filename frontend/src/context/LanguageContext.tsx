@@ -1,0 +1,201 @@
+import React, { createContext, useContext, useState } from 'react'
+
+type Lang = 'en' | 'de'
+
+const translations = {
+  en: {
+    // Nav
+    dashboard: 'Dashboard',
+    qrCodes: 'QR Codes',
+    feedback: 'Feedback',
+    superAdmin: 'Super Admin',
+    logout: 'Logout',
+    // Auth
+    signIn: 'Sign In',
+    signingIn: 'Signing in...',
+    signInSubtitle: 'Sign in to your account',
+    noAccount: 'No account?',
+    registerCompany: 'Register your company',
+    alreadyHaveAccount: 'Already have an account?',
+    createAccount: 'Create Account',
+    creatingAccount: 'Creating account...',
+    companyName: 'Company Name',
+    email: 'Email',
+    password: 'Password',
+    // Dashboard
+    overallPerformance: 'Overall performance',
+    totalFeedback: 'Total Feedback',
+    averageRating: 'Average Rating',
+    outOf10: 'out of 10',
+    active: 'Active',
+    inactive: 'Inactive',
+    activeQRCodes: 'Active QR Codes',
+    filter: 'Filter:',
+    allQRCodes: 'All QR Codes',
+    showing: 'Showing:',
+    topFeedback: '🏆 Top Feedback',
+    needsAttention: '⚠️ Needs Attention',
+    noComment: 'No comment',
+    byQRCode: 'By QR Code',
+    responses: 'responses',
+    avg: 'avg',
+    noFeedbackYet: 'No feedback yet.',
+    shareQRCodes: 'Share your QR codes to start collecting feedback.',
+    dailyChart: 'Daily — Last 30 Days',
+    weeklyChart: 'Weekly — Last 4 Weeks',
+    noDataPeriod: 'No feedback in this period yet.',
+    ratingDistribution: 'Rating Distribution',
+    // QR Codes page
+    generateNew: 'Generate New QR Code',
+    labelPlaceholder: 'e.g. Main Entrance, Table 5...',
+    create: 'Create',
+    creating: 'Creating...',
+    noQRCodes: 'No QR codes yet.',
+    createOneToStart: 'Create one above to get started.',
+    download: 'Download',
+    delete: 'Delete',
+    deleting: 'Deleting...',
+    // Feedback page
+    howWouldYouRate: 'How would you rate your experience?',
+    commentOptional: 'Comment',
+    commentPlaceholder: 'Tell us more about your experience...',
+    optional: 'optional',
+    submitFeedback: 'Submit Feedback',
+    submitting: 'Submitting...',
+    thankYou: 'Thank you!',
+    feedbackSubmitted: 'Your feedback has been submitted.',
+    feedbackClosed: 'Feedback Closed',
+    qrInactive: 'This QR code is no longer active.',
+    qrNotFound: 'QR Code Not Found',
+    // Feedback list
+    allFeedback: 'All Feedback',
+    rating: 'Rating',
+    comment: 'Comment',
+    date: 'Date',
+    loadMore: 'Load More',
+    // Super Admin
+    totalCompanies: 'Total Companies',
+    globalAvgRating: 'Global Average Rating',
+    company: 'Company',
+    slug: 'Slug',
+    avgRating: 'Avg Rating',
+    joined: 'Joined',
+    // Language
+    language: 'Language',
+  },
+  de: {
+    // Nav
+    dashboard: 'Dashboard',
+    qrCodes: 'QR-Codes',
+    feedback: 'Feedback',
+    superAdmin: 'Super-Admin',
+    logout: 'Abmelden',
+    // Auth
+    signIn: 'Anmelden',
+    signingIn: 'Wird angemeldet...',
+    signInSubtitle: 'Bei Ihrem Konto anmelden',
+    noAccount: 'Kein Konto?',
+    registerCompany: 'Unternehmen registrieren',
+    alreadyHaveAccount: 'Bereits ein Konto?',
+    createAccount: 'Konto erstellen',
+    creatingAccount: 'Wird erstellt...',
+    companyName: 'Unternehmensname',
+    email: 'E-Mail',
+    password: 'Passwort',
+    // Dashboard
+    overallPerformance: 'Gesamtleistung',
+    totalFeedback: 'Gesamtfeedback',
+    averageRating: 'Durchschnittsbewertung',
+    outOf10: 'von 10',
+    active: 'Aktiv',
+    inactive: 'Inaktiv',
+    activeQRCodes: 'Aktive QR-Codes',
+    filter: 'Filter:',
+    allQRCodes: 'Alle QR-Codes',
+    showing: 'Angezeigt:',
+    topFeedback: '🏆 Top-Feedback',
+    needsAttention: '⚠️ Verbesserungsbedarf',
+    noComment: 'Kein Kommentar',
+    byQRCode: 'Nach QR-Code',
+    responses: 'Antworten',
+    avg: 'Ø',
+    noFeedbackYet: 'Noch kein Feedback.',
+    shareQRCodes: 'Teilen Sie Ihre QR-Codes, um Feedback zu sammeln.',
+    dailyChart: 'Täglich — Letzte 30 Tage',
+    weeklyChart: 'Wöchentlich — Letzte 4 Wochen',
+    noDataPeriod: 'Noch kein Feedback in diesem Zeitraum.',
+    ratingDistribution: 'Bewertungsverteilung',
+    // QR Codes page
+    generateNew: 'Neuen QR-Code generieren',
+    labelPlaceholder: 'z. B. Haupteingang, Tisch 5...',
+    create: 'Erstellen',
+    creating: 'Wird erstellt...',
+    noQRCodes: 'Noch keine QR-Codes.',
+    createOneToStart: 'Erstellen Sie oben einen, um zu beginnen.',
+    download: 'Herunterladen',
+    delete: 'Löschen',
+    deleting: 'Wird gelöscht...',
+    // Feedback page
+    howWouldYouRate: 'Wie bewerten Sie Ihre Erfahrung?',
+    commentOptional: 'Kommentar',
+    commentPlaceholder: 'Erzählen Sie uns mehr über Ihre Erfahrung...',
+    optional: 'optional',
+    submitFeedback: 'Feedback senden',
+    submitting: 'Wird gesendet...',
+    thankYou: 'Vielen Dank!',
+    feedbackSubmitted: 'Ihr Feedback wurde übermittelt.',
+    feedbackClosed: 'Feedback geschlossen',
+    qrInactive: 'Dieser QR-Code ist nicht mehr aktiv.',
+    qrNotFound: 'QR-Code nicht gefunden',
+    // Feedback list
+    allFeedback: 'Alle Feedbacks',
+    rating: 'Bewertung',
+    comment: 'Kommentar',
+    date: 'Datum',
+    loadMore: 'Mehr laden',
+    // Super Admin
+    totalCompanies: 'Unternehmen gesamt',
+    globalAvgRating: 'Globale Ø-Bewertung',
+    company: 'Unternehmen',
+    slug: 'Slug',
+    avgRating: 'Ø Bewertung',
+    joined: 'Beigetreten',
+    // Language
+    language: 'Sprache',
+  },
+} as const
+
+type TranslationKey = keyof typeof translations.en
+
+interface LanguageContextValue {
+  lang: Lang
+  setLang: (l: Lang) => void
+  t: (key: TranslationKey) => string
+}
+
+const LanguageContext = createContext<LanguageContextValue | null>(null)
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const [lang, setLang] = useState<Lang>(() => {
+    return (localStorage.getItem('lang') as Lang) || 'en'
+  })
+
+  const switchLang = (l: Lang) => {
+    setLang(l)
+    localStorage.setItem('lang', l)
+  }
+
+  const t = (key: TranslationKey): string => translations[lang][key] ?? key
+
+  return (
+    <LanguageContext.Provider value={{ lang, setLang: switchLang, t }}>
+      {children}
+    </LanguageContext.Provider>
+  )
+}
+
+export function useLanguage() {
+  const ctx = useContext(LanguageContext)
+  if (!ctx) throw new Error('useLanguage must be used within LanguageProvider')
+  return ctx
+}

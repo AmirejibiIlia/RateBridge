@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { QRCode } from '../types'
 import { getQRCodeImage, updateQRCode, deleteQRCode } from '../api/company'
+import { useLanguage } from '../context/LanguageContext'
 
 interface Props {
   qr: QRCode
@@ -15,6 +16,7 @@ export default function QRCodeCard({ qr, onDeleted, onUpdated }: Props) {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { t } = useLanguage()
 
   useEffect(() => {
     if (!image) {
@@ -99,7 +101,7 @@ export default function QRCodeCard({ qr, onDeleted, onUpdated }: Props) {
             qr.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
           }`}
         >
-          {qr.is_active ? 'Active' : 'Inactive'}
+          {qr.is_active ? t('active') : t('inactive')}
         </span>
       </div>
 
@@ -123,14 +125,14 @@ export default function QRCodeCard({ qr, onDeleted, onUpdated }: Props) {
           disabled={!image}
           className="flex-1 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
         >
-          Download
+          {t('download')}
         </button>
         <button
           onClick={handleDelete}
           disabled={deleting}
           className="flex-1 py-1.5 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors"
         >
-          {deleting ? 'Deleting...' : 'Delete'}
+          {deleting ? t('deleting') : t('delete')}
         </button>
       </div>
     </div>

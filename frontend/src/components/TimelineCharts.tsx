@@ -3,6 +3,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import type { FeedbackTimeline } from '../types'
+import { useLanguage } from '../context/LanguageContext'
 
 // Colors from red (1) → emerald (10)
 const RATING_COLORS: Record<string, string> = {
@@ -26,6 +27,7 @@ interface ChartProps {
 }
 
 function StackedChart({ data, title }: ChartProps) {
+  const { t } = useLanguage()
   const hasData = data.some((d) => RATINGS.some((r) => d[r] > 0))
 
   return (
@@ -33,10 +35,10 @@ function StackedChart({ data, title }: ChartProps) {
       <h3 className="text-base font-semibold text-gray-700 mb-4">{title}</h3>
       {!hasData ? (
         <div className="flex items-center justify-center h-48 text-gray-400 text-sm">
-          No feedback in this period yet.
+          {t('noDataPeriod')}
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={240}>
+        <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
             <XAxis dataKey="label" tick={{ fontSize: 11 }} interval="preserveStartEnd" />
@@ -83,10 +85,11 @@ function StackedChart({ data, title }: ChartProps) {
 }
 
 export default function TimelineCharts({ timeline }: { timeline: FeedbackTimeline }) {
+  const { t } = useLanguage()
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-      <StackedChart data={timeline.daily} title="Daily — Last 30 Days" />
-      <StackedChart data={timeline.weekly} title="Weekly — Last 4 Weeks" />
+      <StackedChart data={timeline.daily} title={t('dailyChart')} />
+      <StackedChart data={timeline.weekly} title={t('weeklyChart')} />
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import Layout from '../components/Layout'
+import { useLanguage } from '../context/LanguageContext'
 import { getFeedback } from '../api/company'
 import type { Feedback } from '../types'
 
@@ -14,6 +15,7 @@ export default function FeedbackListPage() {
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [hasMore, setHasMore] = useState(true)
+  const { t } = useLanguage()
 
   const PAGE_SIZE = 20
 
@@ -45,21 +47,21 @@ export default function FeedbackListPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">All Feedback</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('allFeedback')}</h1>
 
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           {feedbacks.length === 0 && !loading ? (
             <div className="text-center py-16 text-gray-400">
-              <p className="text-lg">No feedback yet.</p>
-              <p className="text-sm mt-1">Share your QR codes to start collecting feedback.</p>
+              <p className="text-lg">{t('noFeedbackYet')}</p>
+              <p className="text-sm mt-1">{t('shareQRCodes')}</p>
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rating</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Comment</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('rating')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('comment')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('date')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -71,7 +73,7 @@ export default function FeedbackListPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-600 max-w-xs">
-                      {fb.comment || <span className="text-gray-300 italic">No comment</span>}
+                      {fb.comment || <span className="text-gray-300 italic">{t('noComment')}</span>}
                     </td>
                     <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
                       {new Date(fb.created_at).toLocaleString()}
@@ -95,7 +97,7 @@ export default function FeedbackListPage() {
               onClick={handleLoadMore}
               className="px-6 py-2 text-sm font-medium text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
             >
-              Load More
+              {t('loadMore')}
             </button>
           </div>
         )}

@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 import { login } from '../api/auth'
 
 export default function LoginPage() {
@@ -9,6 +10,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login: authLogin } = useAuth()
+  const { t } = useLanguage()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: FormEvent) => {
@@ -33,7 +35,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <img src="/logo.png" alt="RateBridge" className="w-16 h-16 rounded-2xl mx-auto mb-3" />
           <h1 className="text-3xl font-bold text-blue-600">RateBridge</h1>
-          <p className="text-gray-500 mt-2">Sign in to your account</p>
+          <p className="text-gray-500 mt-2">{t('signInSubtitle')}</p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-200 p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -43,7 +45,7 @@ export default function LoginPage() {
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('email')}</label>
               <input
                 type="email"
                 value={email}
@@ -54,7 +56,7 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('password')}</label>
               <input
                 type="password"
                 value={password}
@@ -69,13 +71,13 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? t('signingIn') : t('signIn')}
             </button>
           </form>
           <p className="text-center text-sm text-gray-500 mt-6">
-            No account?{' '}
+            {t('noAccount')}{' '}
             <Link to="/register" className="text-blue-600 hover:underline font-medium">
-              Register your company
+              {t('registerCompany')}
             </Link>
           </p>
         </div>

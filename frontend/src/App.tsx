@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { LanguageProvider } from './context/LanguageContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -11,6 +12,7 @@ import SuperAdminPage from './pages/SuperAdminPage'
 
 export default function App() {
   return (
+    <LanguageProvider>
     <AuthProvider>
       <BrowserRouter>
         <Routes>
@@ -53,5 +55,6 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+    </LanguageProvider>
   )
 }

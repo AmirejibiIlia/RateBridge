@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import StatsCard from '../components/StatsCard'
+import { useLanguage } from '../context/LanguageContext'
 import { getCompanies } from '../api/superadmin'
 import type { CompanyStats } from '../types'
 
 export default function SuperAdminPage() {
   const [companies, setCompanies] = useState<CompanyStats[]>([])
   const [loading, setLoading] = useState(true)
+  const { t } = useLanguage()
 
   useEffect(() => {
     getCompanies()
@@ -25,15 +27,15 @@ export default function SuperAdminPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Super Admin</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('superAdmin')}</h1>
 
         <div className="grid grid-cols-3 gap-4">
-          <StatsCard title="Total Companies" value={totalCompanies} />
-          <StatsCard title="Total Feedback" value={totalFeedback} />
+          <StatsCard title={t('totalCompanies')} value={totalCompanies} />
+          <StatsCard title={t('totalFeedback')} value={totalFeedback} />
           <StatsCard
-            title="Global Average Rating"
+            title={t('globalAvgRating')}
             value={globalAvg != null ? globalAvg.toFixed(1) : '—'}
-            subtitle="out of 10"
+            subtitle={t('outOf10')}
           />
         </div>
 
@@ -42,16 +44,16 @@ export default function SuperAdminPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Company</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Slug</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Feedback</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Avg Rating</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">QR Codes</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Joined</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('company')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('slug')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('feedback')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('avgRating')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('qrCodes')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('joined')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">

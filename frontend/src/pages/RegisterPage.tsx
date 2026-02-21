@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 import { register } from '../api/auth'
 
 export default function RegisterPage() {
@@ -10,6 +11,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login: authLogin } = useAuth()
+  const { t } = useLanguage()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: FormEvent) => {
@@ -34,7 +36,7 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <img src="/logo.png" alt="RateBridge" className="w-16 h-16 rounded-2xl mx-auto mb-3" />
           <h1 className="text-3xl font-bold text-blue-600">RateBridge</h1>
-          <p className="text-gray-500 mt-2">Register your company</p>
+          <p className="text-gray-500 mt-2">{t('registerCompany')}</p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-200 p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -44,7 +46,7 @@ export default function RegisterPage() {
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('companyName')}</label>
               <input
                 type="text"
                 value={companyName}
@@ -55,7 +57,7 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('email')}</label>
               <input
                 type="email"
                 value={email}
@@ -66,7 +68,7 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('password')}</label>
               <input
                 type="password"
                 value={password}
@@ -82,13 +84,13 @@ export default function RegisterPage() {
               disabled={loading}
               className="w-full py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? t('creatingAccount') : t('createAccount')}
             </button>
           </form>
           <p className="text-center text-sm text-gray-500 mt-6">
-            Already have an account?{' '}
+            {t('alreadyHaveAccount')}{' '}
             <Link to="/login" className="text-blue-600 hover:underline font-medium">
-              Sign in
+              {t('signIn')}
             </Link>
           </p>
         </div>
