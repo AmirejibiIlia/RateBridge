@@ -41,3 +41,10 @@ export const getFeedbackTimeline = (qrId?: string) =>
 
 export const deleteQRCode = (id: string) =>
   client.delete(`/api/company/qr-codes/${id}`)
+
+export const generateFeedbackSummary = (date_from: string, date_to: string, categories: string[]) =>
+  client.post<{ summary: string; feedback_count: number }>('/api/company/feedback/summary', {
+    date_from,
+    date_to,
+    categories,
+  }).then((r) => r.data)

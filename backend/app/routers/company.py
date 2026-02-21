@@ -7,7 +7,7 @@ from app.models.user import User
 from app.schemas.company import CompanyStats, CompanyOut, CompanyUpdate
 from app.models.company import Company
 from app.schemas.qr_code import QRCodeCreate, QRCodeUpdate, QRCodeOut
-from app.schemas.feedback import FeedbackOut, FeedbackStats, FeedbackHighlights, FeedbackTimeline
+from app.schemas.feedback import FeedbackOut, FeedbackStats, FeedbackHighlights, FeedbackTimeline, FeedbackSummaryRequest, FeedbackSummaryResponse
 from app.services.company_service import CompanyService
 from app.services.qr_service import QRService
 from app.services.feedback_service import FeedbackService
@@ -52,6 +52,15 @@ def feedback_list(
 @router.get("/feedback/stats", response_model=FeedbackStats)
 def feedback_stats(current_user: User = Depends(require_company_user), db: Session = Depends(get_db)):
     return FeedbackService(db).get_stats(current_user.company_id)
+
+
+@router.post("/feedback/summary", response_model=FeedbackSummaryResponse)
+def feedback_summary(
+    data: FeedbackSummaryRequest,
+    current_user: User = Depends(require_company_user),
+    db: Session = Depends(get_db),
+):
+    return FeedbackService(db).generate_summary(current_user.company_id, data)
 
 
 @router.get("/feedback/highlights", response_model=FeedbackHighlights)

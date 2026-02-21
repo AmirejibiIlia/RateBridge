@@ -3,15 +3,18 @@ from __future__ import annotations
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from openai import OpenAI
 
 from app.models.qr_code import QRCode
 from app.models.feedback import Feedback
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 
 from app.schemas.feedback import (
     FeedbackSubmit, FeedbackOut, FeedbackStats,
     FeedbackHighlights, FeedbackTimeline, TimelineEntry, QRCodePublicInfo,
+    FeedbackSummaryRequest, FeedbackSummaryResponse,
 )
+from app.config import settings
 
 
 class FeedbackService:
@@ -187,6 +190,64 @@ class FeedbackService:
         ]
 
         return FeedbackTimeline(daily=daily, weekly=weekly)
+
+    def generate_summary(self, company_id: str, req: FeedbackSummaryRequest) -> FeedbackSummaryResponse:
+        if not settings.XAI_API_KEY:
+            raise HTTPException(status_code=503, detail="AI summary is not configured (missing XAI_API_KEY)")
+
+        try:
+            date_from = datetime.strptime(req.date_from, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            date_to = datetime.strptime(req.date_to, "%Y-%m-%d").replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format, use YYYY-MM-DD")
+
+        feedbacks = (
+            self.db.query(Feedback)
+            .filter(
+                Feedback.company_id == company_id,
+                Feedback.created_at >= date_from,
+                Feedback.created_at <= date_to,
+            )
+            .order_by(Feedback.created_at.desc())
+            .limit(500)
+            .all()
+        )
+
+        if not feedbacks:
+            return FeedbackSummaryResponse(
+                summary="No feedback found in the selected date range.",
+                feedback_count=0,
+            )
+
+        lines = []
+        for i, fb in enumerate(feedbacks, 1):
+            qr = fb.qr_code.label if fb.qr_code else "Unknown"
+            comment = f'"{fb.comment}"' if fb.comment else "(no comment)"
+            lines.append(f"{i}. Rating: {fb.rating}/10, QR: {qr}, Comment: {comment}")
+
+        categories_str = ", ".join(req.categories) + ", Other"
+        feedback_text = "\n".join(lines)
+
+        prompt = f"""You are analyzing customer feedback for a CEO report. Be concise and insightful.
+
+Date range: {req.date_from} to {req.date_to}
+Total entries: {len(feedbacks)}
+Categories to classify into: {categories_str}
+
+Feedback entries:
+{feedback_text}
+
+Write a short, punchy CEO summary (5-8 sentences max). Group insights by the categories above. Mention specific counts where possible. If a category has no relevant feedback, note it briefly. End with one overall takeaway sentence."""
+
+        client = OpenAI(api_key=settings.XAI_API_KEY, base_url="https://api.x.ai/v1")
+        response = client.chat.completions.create(
+            model="grok-3-latest",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=400,
+        )
+
+        summary = response.choices[0].message.content.strip()
+        return FeedbackSummaryResponse(summary=summary, feedback_count=len(feedbacks))
 
     def list_all(self, page: int = 1, page_size: int = 50) -> list[FeedbackOut]:
         offset = (page - 1) * page_size
