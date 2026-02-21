@@ -74,6 +74,16 @@ const translations = {
     date: 'Date',
     qrName: 'QR Name',
     loadMore: 'Load More',
+    // AI Summary
+    aiSummary: 'AI Summary',
+    dateFrom: 'From',
+    dateTo: 'To',
+    categoriesLabel: 'Categories',
+    categoriesPlaceholder: 'e.g. cleanness, speed, service',
+    generateSummary: 'Generate Summary',
+    generating: 'Generating...',
+    summaryTitle: 'Summary',
+    noApiKey: 'AI summary is not configured. Add XAI_API_KEY to backend environment.',
     // Super Admin
     totalCompanies: 'Total Companies',
     globalAvgRating: 'Global Average Rating',
@@ -166,6 +176,16 @@ const translations = {
     date: 'Datum',
     qrName: 'QR-Name',
     loadMore: 'Mehr laden',
+    // AI Summary
+    aiSummary: 'KI-Zusammenfassung',
+    dateFrom: 'Von',
+    dateTo: 'Bis',
+    categoriesLabel: 'Kategorien',
+    categoriesPlaceholder: 'z. B. Sauberkeit, Geschwindigkeit, Service',
+    generateSummary: 'Zusammenfassung erstellen',
+    generating: 'Wird erstellt...',
+    summaryTitle: 'Zusammenfassung',
+    noApiKey: 'KI-Zusammenfassung nicht konfiguriert. XAI_API_KEY fehlt.',
     // Super Admin
     totalCompanies: 'Unternehmen gesamt',
     globalAvgRating: 'Globale Ø-Bewertung',

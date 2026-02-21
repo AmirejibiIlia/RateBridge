@@ -56,3 +56,14 @@ class QRCodePublicInfo(BaseModel):
     label: str
     company_name: str
     is_active: bool
+
+
+class FeedbackSummaryRequest(BaseModel):
+    date_from: str  # ISO date: YYYY-MM-DD
+    date_to: str    # ISO date: YYYY-MM-DD
+    categories: list[str]
+
+
+class FeedbackSummaryResponse(BaseModel):
+    summary: str
+    feedback_count: int
