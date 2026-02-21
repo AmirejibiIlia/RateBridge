@@ -240,7 +240,7 @@ Feedback entries:
 Write a short, punchy CEO summary (5-8 sentences max). Group insights by the categories above. Mention specific counts where possible. If a category has no relevant feedback, note it briefly. End with one overall takeaway sentence."""
 
         resp = http_requests.post(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+            "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent",
             params={"key": settings.GEMINI_API_KEY},
             json={
                 "contents": [{"parts": [{"text": prompt}]}],
