@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from openai import OpenAI
+import google.generativeai as genai
 
 from app.models.qr_code import QRCode
 from app.models.feedback import Feedback
@@ -192,8 +192,8 @@ class FeedbackService:
         return FeedbackTimeline(daily=daily, weekly=weekly)
 
     def generate_summary(self, company_id: str, req: FeedbackSummaryRequest) -> FeedbackSummaryResponse:
-        if not settings.XAI_API_KEY:
-            raise HTTPException(status_code=503, detail="AI summary is not configured (missing XAI_API_KEY)")
+        if not settings.GEMINI_API_KEY:
+            raise HTTPException(status_code=503, detail="AI summary is not configured (missing GEMINI_API_KEY)")
 
         try:
             date_from = datetime.strptime(req.date_from, "%Y-%m-%d").replace(tzinfo=timezone.utc)
@@ -239,14 +239,10 @@ Feedback entries:
 
 Write a short, punchy CEO summary (5-8 sentences max). Group insights by the categories above. Mention specific counts where possible. If a category has no relevant feedback, note it briefly. End with one overall takeaway sentence."""
 
-        client = OpenAI(api_key=settings.XAI_API_KEY, base_url="https://api.x.ai/v1")
-        response = client.chat.completions.create(
-            model="grok-3-latest",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=400,
-        )
-
-        summary = response.choices[0].message.content.strip()
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        response = model.generate_content(prompt)
+        summary = response.text.strip()
         return FeedbackSummaryResponse(summary=summary, feedback_count=len(feedbacks))
 
     def list_all(self, page: int = 1, page_size: int = 50) -> list[FeedbackOut]:
