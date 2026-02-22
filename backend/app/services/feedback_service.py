@@ -142,7 +142,7 @@ class FeedbackService:
             worst3=[FeedbackOut.model_validate(f) for f in worst3],
         )
 
-    def get_timeline(self, company_id: str, qr_code_id: str | None = None) -> FeedbackTimeline:
+    def get_timeline(self, company_id: str, qr_code_id: str | None = None, tz_offset: int = 0) -> FeedbackTimeline:
         now = datetime.now(timezone.utc)
         since = now - timedelta(days=30)
 
@@ -154,14 +154,17 @@ class FeedbackService:
             q = q.filter(Feedback.qr_code_id == qr_code_id)
         feedbacks = q.all()
 
+        tz_delta = timedelta(minutes=tz_offset)
+        local_now = now + tz_delta
+
         # --- Daily: last 30 days ---
         daily_map: dict[str, dict[int, int]] = {}
         for i in range(30):
-            day = (now - timedelta(days=29 - i)).strftime("%b %d")
+            day = (local_now - timedelta(days=29 - i)).strftime("%b %d")
             daily_map[day] = {r: 0 for r in range(1, 11)}
 
         for fb in feedbacks:
-            day = fb.created_at.strftime("%b %d")
+            day = (fb.created_at + tz_delta).strftime("%b %d")
             if day in daily_map:
                 daily_map[day][fb.rating] += 1
 
@@ -174,13 +177,13 @@ class FeedbackService:
         weekly_map: dict[str, dict[int, int]] = {}
         week_labels = []
         for i in range(4):
-            week_start = now - timedelta(days=27 - i * 7)
+            week_start = local_now - timedelta(days=27 - i * 7)
             label = "Wk " + week_start.strftime("%b %d")
             week_labels.append(label)
             weekly_map[label] = {r: 0 for r in range(1, 11)}
 
         for fb in feedbacks:
-            days_ago = (now - fb.created_at).days
+            days_ago = (local_now - (fb.created_at + tz_delta)).days
             week_index = min(days_ago // 7, 3)
             label = week_labels[3 - week_index]
             weekly_map[label][fb.rating] += 1

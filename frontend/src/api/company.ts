@@ -37,10 +37,12 @@ export const getQRCodeStats = (id: string) =>
 export const getFeedbackHighlights = () =>
   client.get<import('../types').FeedbackHighlights>('/api/company/feedback/highlights').then((r) => r.data)
 
-export const getFeedbackTimeline = (qrId?: string) =>
-  client.get<import('../types').FeedbackTimeline>('/api/company/feedback/timeline', {
-    params: qrId ? { qr_id: qrId } : {},
+export const getFeedbackTimeline = (qrId?: string) => {
+  const tz_offset = -new Date().getTimezoneOffset()
+  return client.get<import('../types').FeedbackTimeline>('/api/company/feedback/timeline', {
+    params: { tz_offset, ...(qrId ? { qr_id: qrId } : {}) },
   }).then((r) => r.data)
+}
 
 export const deleteQRCode = (id: string) =>
   client.delete(`/api/company/qr-codes/${id}`)

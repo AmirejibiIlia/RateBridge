@@ -85,10 +85,11 @@ def feedback_highlights(current_user: User = Depends(require_company_user), db: 
 @router.get("/feedback/timeline", response_model=FeedbackTimeline)
 def feedback_timeline(
     qr_id: str | None = Query(None),
+    tz_offset: int = Query(0),
     current_user: User = Depends(require_company_user),
     db: Session = Depends(get_db),
 ):
-    return FeedbackService(db).get_timeline(current_user.company_id, qr_code_id=qr_id)
+    return FeedbackService(db).get_timeline(current_user.company_id, qr_code_id=qr_id, tz_offset=tz_offset)
 
 
 @router.get("/qr-codes", response_model=list[QRCodeOut])
