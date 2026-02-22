@@ -56,6 +56,7 @@ class QRCodePublicInfo(BaseModel):
     label: str
     company_name: str
     is_active: bool
+    logo_base64: str | None = None
 
 
 class FeedbackSummaryRequest(BaseModel):

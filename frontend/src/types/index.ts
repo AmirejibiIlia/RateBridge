@@ -77,6 +77,7 @@ export interface QRCodePublicInfo {
   label: string
   company_name: string
   is_active: boolean
+  logo_base64: string | null
 }
 
 export interface TokenResponse {

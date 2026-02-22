@@ -5,6 +5,43 @@ import { getQRInfo, submitFeedback } from '../api/feedback'
 import { useLanguage } from '../context/LanguageContext'
 import type { QRCodePublicInfo } from '../types'
 
+function LangSwitcher() {
+  const { lang, setLang } = useLanguage()
+  return (
+    <div className="fixed top-4 right-4 flex items-center gap-1 text-sm font-medium z-10">
+      <button
+        onClick={() => setLang('en')}
+        className={lang === 'en' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600 transition-colors'}
+      >
+        EN
+      </button>
+      <span className="text-gray-300">/</span>
+      <button
+        onClick={() => setLang('de')}
+        className={lang === 'de' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600 transition-colors'}
+      >
+        DE
+      </button>
+    </div>
+  )
+}
+
+function CompanyHeader({ info }: { info: QRCodePublicInfo }) {
+  return (
+    <div className="text-center mb-8">
+      {info.logo_base64 && (
+        <img
+          src={info.logo_base64}
+          alt={info.company_name}
+          className="w-16 h-16 rounded-xl object-cover mx-auto mb-3"
+        />
+      )}
+      <p className="text-sm font-medium text-blue-600 uppercase tracking-wide">{info.company_name}</p>
+      <h1 className="text-2xl font-bold text-gray-900 mt-1">{info.label}</h1>
+    </div>
+  )
+}
+
 export default function FeedbackPage() {
   const { uuid } = useParams<{ uuid: string }>()
   const { t } = useLanguage()
@@ -50,6 +87,7 @@ export default function FeedbackPage() {
   if (error && !info) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <LangSwitcher />
         <div className="text-center">
           <p className="text-2xl font-bold text-gray-900">{t('qrNotFound')}</p>
           <p className="text-gray-500 mt-2">{error}</p>
@@ -61,7 +99,15 @@ export default function FeedbackPage() {
   if (!info?.is_active) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <LangSwitcher />
         <div className="text-center">
+          {info?.logo_base64 && (
+            <img
+              src={info.logo_base64}
+              alt={info.company_name}
+              className="w-16 h-16 rounded-xl object-cover mx-auto mb-4"
+            />
+          )}
           <p className="text-2xl font-bold text-gray-900">{t('feedbackClosed')}</p>
           <p className="text-gray-500 mt-2">{t('qrInactive')}</p>
         </div>
@@ -72,8 +118,15 @@ export default function FeedbackPage() {
   if (submitted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <LangSwitcher />
         <div className="text-center max-w-sm">
-          <div className="text-6xl mb-4">🎉</div>
+          {info?.logo_base64 && (
+            <img
+              src={info.logo_base64}
+              alt={info.company_name}
+              className="w-16 h-16 rounded-xl object-cover mx-auto mb-4"
+            />
+          )}
           <p className="text-2xl font-bold text-gray-900">{t('thankYou')}</p>
           <p className="text-gray-500 mt-2">{t('feedbackSubmitted')}</p>
         </div>
@@ -83,14 +136,13 @@ export default function FeedbackPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <LangSwitcher />
       <div className="w-full max-w-lg">
-        <div className="text-center mb-8">
-          <p className="text-sm font-medium text-blue-600 uppercase tracking-wide">{info?.company_name}</p>
-          <h1 className="text-2xl font-bold text-gray-900 mt-1">{info?.label}</h1>
-          <p className="text-gray-500 mt-2">{t('howWouldYouRate')}</p>
-        </div>
+        <CompanyHeader info={info!} />
 
         <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
+          <p className="text-center text-gray-500 -mt-2">{t('howWouldYouRate')}</p>
+
           <RatingPicker value={rating} onChange={setRating} />
 
           <div>

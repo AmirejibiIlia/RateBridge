@@ -30,6 +30,7 @@ class FeedbackService:
             label=qr.label,
             company_name=qr.company.name,
             is_active=qr.is_active,
+            logo_base64=qr.company.logo_base64,
         )
 
     def submit(self, uuid: str, data: FeedbackSubmit, ip_address: str | None) -> FeedbackOut:
