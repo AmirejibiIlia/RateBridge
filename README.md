@@ -33,10 +33,15 @@ RateBridge makes feedback frictionless:
 ### For Businesses
 - **QR Code Generator** — create unlimited QR codes per location, station, or product with custom labels
 - **Editable labels** — rename QR codes anytime without regenerating them
-- **Dashboard** — overall stats (total responses, average rating) with rating distribution chart
+- **Dashboard** — overall stats (total responses, average rating, active QR codes) with rating distribution chart
+- **Timeline charts** — daily (last 30 days) and weekly (last 4 weeks) stacked bar charts, filterable by QR code
 - **Per-QR analytics** — separate breakdown for each QR code to identify which locations perform best and worst
 - **Top & Worst Feedback** — instantly see your 3 best and 3 worst responses side by side
 - **Full Feedback History** — paginated list of all responses with ratings, comments, and timestamps
+- **AI Summary** — generate a structured category-by-category summary of feedback for any date range using Groq (llama-3.3-70b)
+- **Company Logo** — upload a logo with automatic square crop; displayed on the dashboard header
+- **Company Settings** — update company name and admin password from the Admin panel
+- **Language Switching** — full English and German UI support
 
 ### For Customers
 - **Zero friction** — scan QR → rate → done. No account, no app, no personal info required
@@ -53,10 +58,11 @@ RateBridge makes feedback frictionless:
 | Layer | Technology |
 |-------|-----------|
 | Backend API | FastAPI (Python 3.11) |
-| Database | PostgreSQL + SQLAlchemy |
-| Authentication | JWT (24h tokens) |
+| Database | PostgreSQL + SQLAlchemy (sync) |
+| Authentication | JWT (24h tokens, python-jose) |
 | Password hashing | bcrypt via passlib |
 | QR Generation | `qrcode` library → base64 PNG |
+| AI Summary | Groq API (llama-3.3-70b) |
 | Frontend | React 18 + TypeScript + Vite |
 | Styling | Tailwind CSS |
 | Charts | Recharts |
@@ -94,9 +100,10 @@ docker-compose up
 |----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string |
 | `SECRET_KEY` | Random 32-char string for JWT signing |
-| `SUPERADMIN_EMAIL` | Email for the super admin account |
+| `SUPERADMIN_EMAIL` | Email for the super admin account (bootstrapped on startup) |
 | `SUPERADMIN_PASSWORD` | Password for the super admin account |
 | `FRONTEND_URL` | Frontend origin (used for CORS) |
+| `GROQ_API_KEY` | Groq API key for AI feedback summaries (optional — feature disabled if empty) |
 
 **Frontend:**
 
@@ -112,7 +119,7 @@ The app is designed for one-click deployment on [Railway](https://railway.app):
 
 1. Fork this repo and connect it to a new Railway project
 2. Add a **PostgreSQL** plugin — `DATABASE_URL` is injected automatically
-3. Add a **backend service** — set Root Directory to `backend`, add the 5 env vars above
+3. Add a **backend service** — set Root Directory to `backend`, add the env vars above
 4. Add a **frontend service** — set Root Directory to `frontend`, add `VITE_API_URL`
 5. Generate public domains for both services in Railway's Networking settings
 
@@ -132,10 +139,10 @@ RateBridge/
 │   └── requirements.txt
 └── frontend/         # React + TypeScript SPA
     └── src/
-        ├── pages/    # Route-level page components
+        ├── pages/      # Route-level page components
         ├── components/ # Reusable UI components
-        ├── api/      # Axios API wrappers
-        └── context/  # Auth context (global user state)
+        ├── api/        # Axios API wrappers
+        └── context/    # Auth + Language context providers
 ```
 
 ---
@@ -147,9 +154,15 @@ RateBridge/
 | POST | `/api/auth/register` | Public | Register company + admin user |
 | POST | `/api/auth/login` | Public | Get JWT token |
 | GET | `/api/auth/me` | JWT | Current user info |
-| GET | `/api/company/dashboard` | JWT | Company stats |
+| GET | `/api/company/profile` | JWT | Company profile (name, logo) |
+| PATCH | `/api/company/profile` | JWT | Update company name |
+| PATCH | `/api/company/profile/logo` | JWT | Update company logo (base64) |
+| GET | `/api/company/dashboard` | JWT | Company stats (totals, avg rating) |
 | GET | `/api/company/feedback` | JWT | Paginated feedback list |
+| GET | `/api/company/feedback/stats` | JWT | Rating distribution stats |
 | GET | `/api/company/feedback/highlights` | JWT | Top 3 & worst 3 feedback |
+| GET | `/api/company/feedback/timeline` | JWT | Daily/weekly chart data (optional `qr_id` filter) |
+| POST | `/api/company/feedback/summary` | JWT | Generate AI summary for a date range and categories |
 | GET | `/api/company/qr-codes` | JWT | List QR codes (with images) |
 | POST | `/api/company/qr-codes` | JWT | Create QR code |
 | PATCH | `/api/company/qr-codes/{id}` | JWT | Rename QR code |
