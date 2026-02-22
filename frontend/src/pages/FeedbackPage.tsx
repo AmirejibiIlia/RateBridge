@@ -8,17 +8,17 @@ import type { QRCodePublicInfo } from '../types'
 function LangSwitcher() {
   const { lang, setLang } = useLanguage()
   return (
-    <div className="fixed top-4 right-4 flex items-center gap-1 text-sm font-medium z-10">
+    <div className="absolute top-5 right-5 flex items-center gap-1.5 text-xs font-semibold tracking-wide">
       <button
         onClick={() => setLang('en')}
-        className={lang === 'en' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600 transition-colors'}
+        className={lang === 'en' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600 transition-colors'}
       >
         EN
       </button>
-      <span className="text-gray-300">/</span>
+      <span className="text-gray-200">|</span>
       <button
         onClick={() => setLang('de')}
-        className={lang === 'de' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600 transition-colors'}
+        className={lang === 'de' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600 transition-colors'}
       >
         DE
       </button>
@@ -26,18 +26,21 @@ function LangSwitcher() {
   )
 }
 
-function CompanyHeader({ info }: { info: QRCodePublicInfo }) {
+function CheckIcon() {
   return (
-    <div className="text-center mb-8">
-      {info.logo_base64 && (
-        <img
-          src={info.logo_base64}
-          alt={info.company_name}
-          className="w-16 h-16 rounded-xl object-cover mx-auto mb-3"
-        />
-      )}
-      <p className="text-sm font-medium text-blue-600 uppercase tracking-wide">{info.company_name}</p>
-      <h1 className="text-2xl font-bold text-gray-900 mt-1">{info.label}</h1>
+    <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-5">
+      <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+  )
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12 relative">
+      <LangSwitcher />
+      {children}
     </div>
   )
 }
@@ -79,87 +82,96 @@ export default function FeedbackPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-blue-600" />
       </div>
     )
   }
 
   if (error && !info) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <LangSwitcher />
+      <Shell>
         <div className="text-center">
-          <p className="text-2xl font-bold text-gray-900">{t('qrNotFound')}</p>
-          <p className="text-gray-500 mt-2">{error}</p>
+          <p className="text-xl font-semibold text-gray-900">{t('qrNotFound')}</p>
+          <p className="text-sm text-gray-400 mt-2">{error}</p>
         </div>
-      </div>
+      </Shell>
     )
   }
 
   if (!info?.is_active) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <LangSwitcher />
+      <Shell>
         <div className="text-center">
           {info?.logo_base64 && (
-            <img
-              src={info.logo_base64}
-              alt={info.company_name}
-              className="w-16 h-16 rounded-xl object-cover mx-auto mb-4"
-            />
+            <img src={info.logo_base64} alt={info.company_name} className="w-14 h-14 rounded-xl object-cover mx-auto mb-5" />
           )}
-          <p className="text-2xl font-bold text-gray-900">{t('feedbackClosed')}</p>
-          <p className="text-gray-500 mt-2">{t('qrInactive')}</p>
+          <p className="text-xl font-semibold text-gray-900">{t('feedbackClosed')}</p>
+          <p className="text-sm text-gray-400 mt-2">{t('qrInactive')}</p>
         </div>
-      </div>
+      </Shell>
     )
   }
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <LangSwitcher />
-        <div className="text-center max-w-sm">
+      <Shell>
+        <div className="text-center">
           {info?.logo_base64 && (
-            <img
-              src={info.logo_base64}
-              alt={info.company_name}
-              className="w-16 h-16 rounded-xl object-cover mx-auto mb-4"
-            />
+            <img src={info.logo_base64} alt={info.company_name} className="w-14 h-14 rounded-xl object-cover mx-auto mb-6" />
           )}
-          <p className="text-2xl font-bold text-gray-900">{t('thankYou')}</p>
-          <p className="text-gray-500 mt-2">{t('feedbackSubmitted')}</p>
+          <CheckIcon />
+          <p className="text-xl font-semibold text-gray-900">{t('thankYou')}</p>
+          <p className="text-sm text-gray-400 mt-2">{t('feedbackSubmitted')}</p>
         </div>
-      </div>
+      </Shell>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <LangSwitcher />
-      <div className="w-full max-w-lg">
-        <CompanyHeader info={info!} />
+    <Shell>
+      <div className="w-full max-w-sm">
+        {/* Header */}
+        <div className="text-center mb-8">
+          {info?.logo_base64 ? (
+            <img
+              src={info.logo_base64}
+              alt={info.company_name}
+              className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4 shadow-sm"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center mx-auto mb-4">
+              <span className="text-white text-2xl font-bold">{info?.company_name?.[0]}</span>
+            </div>
+          )}
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">{info?.company_name}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{info?.label}</h1>
+        </div>
 
-        <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6">
-          <p className="text-center text-gray-500 -mt-2">{t('howWouldYouRate')}</p>
+        {/* Card */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-7 space-y-7">
+          <div>
+            <p className="text-sm font-medium text-gray-500 text-center mb-5">{t('howWouldYouRate')}</p>
+            <RatingPicker value={rating} onChange={setRating} />
+          </div>
 
-          <RatingPicker value={rating} onChange={setRating} />
+          <div className="border-t border-gray-100" />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('commentOptional')} <span className="text-gray-400">({t('optional')})</span>
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+              {t('commentOptional')}
+              <span className="normal-case font-normal text-gray-300 ml-1">— {t('optional')}</span>
             </label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition"
               placeholder={t('commentPlaceholder')}
             />
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm">
               {error}
             </div>
           )}
@@ -167,12 +179,12 @@ export default function FeedbackPage() {
           <button
             onClick={handleSubmit}
             disabled={!rating || submitting}
-            className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors text-base"
+            className="w-full py-3.5 bg-blue-600 text-white text-sm font-semibold rounded-2xl hover:bg-blue-700 disabled:opacity-40 transition-colors"
           >
             {submitting ? t('submitting') : t('submitFeedback')}
           </button>
         </div>
       </div>
-    </div>
+    </Shell>
   )
 }
