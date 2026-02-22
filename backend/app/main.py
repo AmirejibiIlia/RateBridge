@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from sqlalchemy import text
 from app.config import settings
 from app.database import engine
 from app.models import Base
@@ -13,6 +14,11 @@ from app.routers import auth, company, feedback, superadmin
 async def lifespan(app: FastAPI):
     # Create all tables
     Base.metadata.create_all(bind=engine)
+
+    # Add new columns to existing tables (safe migrations)
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS logo_base64 TEXT"))
+        conn.commit()
 
     # Bootstrap super admin
     from app.database import SessionLocal

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.dependencies import require_company_user
 from app.models.user import User
-from app.schemas.company import CompanyStats, CompanyOut, CompanyUpdate
+from app.schemas.company import CompanyStats, CompanyOut, CompanyUpdate, LogoUpdate
 from app.models.company import Company
 from app.schemas.qr_code import QRCodeCreate, QRCodeUpdate, QRCodeOut
 from app.schemas.feedback import FeedbackOut, FeedbackStats, FeedbackHighlights, FeedbackTimeline, FeedbackSummaryRequest, FeedbackSummaryResponse
@@ -30,6 +30,19 @@ def update_profile(
 ):
     company = db.query(Company).filter(Company.id == current_user.company_id).first()
     company.name = data.name
+    db.commit()
+    db.refresh(company)
+    return CompanyOut.model_validate(company)
+
+
+@router.patch("/profile/logo", response_model=CompanyOut)
+def update_logo(
+    data: LogoUpdate,
+    current_user: User = Depends(require_company_user),
+    db: Session = Depends(get_db),
+):
+    company = db.query(Company).filter(Company.id == current_user.company_id).first()
+    company.logo_base64 = data.logo_base64
     db.commit()
     db.refresh(company)
     return CompanyOut.model_validate(company)

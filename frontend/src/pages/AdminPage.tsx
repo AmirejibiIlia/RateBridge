@@ -1,7 +1,7 @@
-import { useState, useEffect, FormEvent } from 'react'
+import { useState, useEffect, useRef, FormEvent, ChangeEvent } from 'react'
 import Layout from '../components/Layout'
 import { useLanguage } from '../context/LanguageContext'
-import { getProfile, updateProfile } from '../api/company'
+import { getProfile, updateProfile, updateLogo } from '../api/company'
 import { changePassword } from '../api/auth'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -13,8 +13,35 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
+function cropToSquareBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const size = Math.min(img.width, img.height)
+      const canvas = document.createElement('canvas')
+      canvas.width = 256
+      canvas.height = 256
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(
+        img,
+        (img.width - size) / 2,
+        (img.height - size) / 2,
+        size,
+        size,
+        0, 0, 256, 256,
+      )
+      URL.revokeObjectURL(url)
+      resolve(canvas.toDataURL('image/jpeg', 0.85))
+    }
+    img.onerror = reject
+    img.src = url
+  })
+}
+
 export default function AdminPage() {
   const { t, lang, setLang } = useLanguage()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Company name
   const [companyName, setCompanyName] = useState('')
@@ -26,8 +53,17 @@ export default function AdminPage() {
   const [pwSaving, setPwSaving] = useState(false)
   const [pwStatus, setPwStatus] = useState<'idle' | 'saved' | 'error'>('idle')
 
+  // Logo
+  const [currentLogo, setCurrentLogo] = useState<string | null>(null)
+  const [previewLogo, setPreviewLogo] = useState<string | null>(null)
+  const [logoSaving, setLogoSaving] = useState(false)
+  const [logoStatus, setLogoStatus] = useState<'idle' | 'saved' | 'error'>('idle')
+
   useEffect(() => {
-    getProfile().then((c) => setCompanyName(c.name))
+    getProfile().then((c) => {
+      setCompanyName(c.name)
+      setCurrentLogo(c.logo_base64 ?? null)
+    })
   }, [])
 
   const handleSaveName = async (e: FormEvent) => {
@@ -63,10 +99,90 @@ export default function AdminPage() {
     }
   }
 
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const base64 = await cropToSquareBase64(file)
+    setPreviewLogo(base64)
+    e.target.value = ''
+  }
+
+  const handleSaveLogo = async () => {
+    if (!previewLogo) return
+    setLogoSaving(true)
+    setLogoStatus('idle')
+    try {
+      await updateLogo(previewLogo)
+      setCurrentLogo(previewLogo)
+      setPreviewLogo(null)
+      setLogoStatus('saved')
+      setTimeout(() => setLogoStatus('idle'), 3000)
+    } catch {
+      setLogoStatus('error')
+    } finally {
+      setLogoSaving(false)
+    }
+  }
+
+  const displayLogo = previewLogo ?? currentLogo
+
   return (
     <Layout>
       <div className="space-y-6 max-w-lg">
         <h1 className="text-2xl font-bold text-gray-900">{t('adminSection')}</h1>
+
+        {/* Logo */}
+        <Section title={t('logoSettings')}>
+          <div className="flex items-center gap-5">
+            <div
+              className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden shrink-0 cursor-pointer hover:border-blue-400 transition-colors"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {displayLogo ? (
+                <img src={displayLogo} alt="Logo" className="w-full h-full object-cover" />
+              ) : (
+                <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              )}
+            </div>
+            <div className="space-y-2 flex-1">
+              <p className="text-xs text-gray-400">{t('logoHint')}</p>
+              <div className="flex items-center gap-3 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  {t('uploadLogo')}
+                </button>
+                {previewLogo && (
+                  <button
+                    type="button"
+                    onClick={handleSaveLogo}
+                    disabled={logoSaving}
+                    className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                  >
+                    {logoSaving ? t('saving') : t('saveChanges')}
+                  </button>
+                )}
+                {logoStatus === 'saved' && (
+                  <span className="text-sm text-green-600 font-medium">{t('logoSaved')}</span>
+                )}
+                {logoStatus === 'error' && (
+                  <span className="text-sm text-red-600">Failed to save.</span>
+                )}
+              </div>
+            </div>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </Section>
 
         {/* Company Settings */}
         <Section title={t('companySettings')}>

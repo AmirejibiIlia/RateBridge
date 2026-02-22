@@ -93,6 +93,10 @@ const translations = {
     joined: 'Joined',
     // Admin
     adminSection: 'Admin',
+    logoSettings: 'Company Logo',
+    uploadLogo: 'Upload Logo',
+    logoHint: 'Square image recommended. Will be cropped automatically.',
+    logoSaved: 'Logo saved!',
     companySettings: 'Company Settings',
     companyNameLabel: 'Company Name',
     saveChanges: 'Save Changes',
@@ -195,6 +199,10 @@ const translations = {
     joined: 'Beigetreten',
     // Admin
     adminSection: 'Admin',
+    logoSettings: 'Unternehmenslogo',
+    uploadLogo: 'Logo hochladen',
+    logoHint: 'Quadratisches Bild empfohlen. Wird automatisch zugeschnitten.',
+    logoSaved: 'Logo gespeichert!',
     companySettings: 'Unternehmenseinstellungen',
     companyNameLabel: 'Unternehmensname',
     saveChanges: 'Änderungen speichern',
