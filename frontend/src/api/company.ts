@@ -7,6 +7,9 @@ export const getProfile = () =>
 export const updateProfile = (name: string) =>
   client.patch<import('../types').Company>('/api/company/profile', { name }).then((r) => r.data)
 
+export const updateLogo = (logo_base64: string) =>
+  client.patch<import('../types').Company>('/api/company/profile/logo', { logo_base64 }).then((r) => r.data)
+
 export const getDashboard = () =>
   client.get<CompanyStats>('/api/company/dashboard').then((r) => r.data)
 

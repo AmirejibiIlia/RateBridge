@@ -90,9 +90,18 @@ export default function DashboardPage() {
       <div className="space-y-8">
         {/* General overview */}
         <div className="space-y-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{stats?.company.name}</h1>
-            <p className="text-gray-500 text-sm mt-1">{t('overallPerformance')}</p>
+          <div className="flex items-center gap-3">
+            {stats?.company.logo_base64 && (
+              <img
+                src={stats.company.logo_base64}
+                alt="logo"
+                className="w-12 h-12 rounded-xl object-cover shrink-0"
+              />
+            )}
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{stats?.company.name}</h1>
+              <p className="text-gray-500 text-sm mt-0.5">{t('overallPerformance')}</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

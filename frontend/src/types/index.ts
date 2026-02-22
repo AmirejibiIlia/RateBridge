@@ -9,6 +9,7 @@ export interface Company {
   id: string
   name: string
   slug: string
+  logo_base64: string | null
   created_at: string
 }
 
