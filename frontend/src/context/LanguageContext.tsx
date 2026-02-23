@@ -108,6 +108,15 @@ const translations = {
     passwordUpdated: 'Password updated!',
     language: 'Language',
     languageSettings: 'Language',
+    // Dashboard
+    feedbackTrends: 'Feedback Trends',
+    daily: 'Daily',
+    weekly: 'Weekly',
+    qrPerformance: 'QR Performance',
+    recentHighlights: 'Recent Highlights',
+    topRated: 'Top Rated',
+    lowestRated: 'Lowest',
+    aspects: 'Aspects',
   },
   de: {
     // Nav
@@ -214,6 +223,15 @@ const translations = {
     passwordUpdated: 'Passwort aktualisiert!',
     language: 'Sprache',
     languageSettings: 'Sprache',
+    // Dashboard
+    feedbackTrends: 'Feedback-Verlauf',
+    daily: 'Täglich',
+    weekly: 'Wöchentlich',
+    qrPerformance: 'QR-Leistung',
+    recentHighlights: 'Aktuelle Highlights',
+    topRated: 'Beste',
+    lowestRated: 'Schlechteste',
+    aspects: 'Aspekte',
   },
 } as const
 
