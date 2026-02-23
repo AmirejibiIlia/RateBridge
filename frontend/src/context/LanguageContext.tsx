@@ -170,6 +170,8 @@ const translations = {
     landingPasswordPlaceholder: 'Min. 8 characters',
     landingAlreadyPartner: 'Already a partner?',
     landingFooter: '© 2025 RateBridge. All rights reserved.',
+    landingPreviewTitle: 'See the product in action',
+    landingPreviewSub: 'A live look at what your team uses every day — from the moment a rating comes in to the moment an issue is resolved.',
     // Tasks
     tasks: 'Manage Tasks',
     newTask: 'New Task',
@@ -364,6 +366,8 @@ const translations = {
     landingPasswordPlaceholder: 'Mind. 8 Zeichen',
     landingAlreadyPartner: 'Bereits Partner?',
     landingFooter: '© 2025 RateBridge. Alle Rechte vorbehalten.',
+    landingPreviewTitle: 'Das Produkt in Aktion',
+    landingPreviewSub: 'Ein Live-Blick auf das, was Ihr Team täglich nutzt — vom Eingang einer Bewertung bis zur Lösung eines Problems.',
     // Tasks
     tasks: 'Aufgaben verwalten',
     newTask: 'Neue Aufgabe',

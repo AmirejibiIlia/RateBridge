@@ -4,6 +4,205 @@ import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
 import { register } from '../api/auth'
 
+/* ─── tiny helpers ────────────────────────────────────────── */
+function RatingBadge({ v }: { v: number }) {
+  const color = v >= 8 ? 'text-green-600' : v >= 6 ? 'text-amber-500' : 'text-red-500'
+  return <span className={`font-bold tabular-nums ${color}`}>{v.toFixed(1)}</span>
+}
+
+function StatusChip({ s }: { s: 'resolved' | 'in_progress' | 'backlog' | 'rejected' }) {
+  const map = {
+    resolved: 'bg-green-100 text-green-700',
+    in_progress: 'bg-blue-100 text-blue-700',
+    backlog: 'bg-gray-100 text-gray-500',
+    rejected: 'bg-red-100 text-red-500',
+  }
+  const label = {
+    resolved: 'Resolved',
+    in_progress: 'In Progress',
+    backlog: 'Backlog',
+    rejected: 'Rejected',
+  }
+  return (
+    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${map[s]}`}>
+      {label[s]}
+    </span>
+  )
+}
+
+/* ─── mock panels ─────────────────────────────────────────── */
+function MockWindow({ title, children, accent = 'bg-blue-500' }: {
+  title: string; children: React.ReactNode; accent?: string
+}) {
+  return (
+    <div className="rounded-xl border border-gray-200 shadow-md overflow-hidden bg-white flex flex-col">
+      {/* title bar */}
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+        <div className="flex gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+          <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+          <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
+        </div>
+        <div className="flex-1 flex justify-center">
+          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-500">
+            <span className={`w-2 h-2 rounded-full ${accent}`} />
+            {title}
+          </span>
+        </div>
+      </div>
+      <div className="flex-1 p-4">{children}</div>
+    </div>
+  )
+}
+
+function MockDashboard() {
+  const bars = [
+    { label: 'Bar & Lounge', rating: 8.7, total: 94 },
+    { label: 'Reception', rating: 7.9, total: 71 },
+    { label: 'Restaurant', rating: 7.2, total: 58 },
+    { label: 'Restrooms', rating: 5.4, total: 25 },
+  ]
+  return (
+    <MockWindow title="Dashboard" accent="bg-blue-500">
+      {/* KPI row */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {[
+          { label: 'Responses', value: '248' },
+          { label: 'Avg Rating', value: '7.4' },
+          { label: 'Active QRs', value: '6' },
+        ].map(({ label, value }) => (
+          <div key={label} className="bg-gray-50 rounded-lg p-2 text-center border border-gray-100">
+            <p className="text-sm font-bold text-gray-900">{value}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">{label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Mini bar chart */}
+      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Last 7 days</p>
+      <div className="flex items-end gap-1 h-16 mb-4">
+        {[3, 7, 5, 12, 9, 15, 11].map((h, i) => (
+          <div key={i} className="flex-1 flex flex-col justify-end">
+            <div
+              className="rounded-t"
+              style={{
+                height: `${(h / 15) * 100}%`,
+                background: `hsl(${120 * (h / 15)}, 60%, 50%)`,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Leaderboard */}
+      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">QR Performance</p>
+      <div className="space-y-1.5">
+        {bars.map(({ label, rating, total }) => (
+          <div key={label} className="flex items-center gap-2">
+            <RatingBadge v={rating} />
+            <span className="flex-1 text-xs text-gray-700 truncate">{label}</span>
+            <span className="text-[10px] text-gray-400">{total}</span>
+          </div>
+        ))}
+      </div>
+    </MockWindow>
+  )
+}
+
+function MockAI() {
+  return (
+    <MockWindow title="AI Summary" accent="bg-purple-500">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-[10px] font-semibold text-gray-500">This week</p>
+          <p className="text-[10px] text-gray-400">48 responses analysed</p>
+        </div>
+        <span className="text-xs text-purple-600 font-semibold">✨ Generated</span>
+      </div>
+      {[
+        {
+          header: 'STRENGTHS',
+          bullets: ['Speed of service praised in 18 reviews', 'Staff friendliness mentioned positively', 'Cleanliness scores improved vs last week'],
+          color: 'border-green-200 bg-green-50/50',
+          hdr: 'text-green-700',
+        },
+        {
+          header: 'TO IMPROVE',
+          bullets: ['Wait times mentioned negatively 12×', 'Noise level flagged by bar guests', 'Checkout queue cited at peak hours'],
+          color: 'border-red-200 bg-red-50/50',
+          hdr: 'text-red-600',
+        },
+      ].map(({ header, bullets, color, hdr }) => (
+        <div key={header} className={`rounded-lg border px-3 py-2.5 mb-2 ${color}`}>
+          <p className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${hdr}`}>{header}</p>
+          <ul className="space-y-1">
+            {bullets.map((b) => (
+              <li key={b} className="flex gap-1.5 text-[11px] text-gray-700">
+                <span className="text-gray-300 shrink-0">–</span>
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </MockWindow>
+  )
+}
+
+function MockTasks() {
+  const tasks: { title: string; status: 'resolved' | 'in_progress' | 'backlog' }[] = [
+    { title: 'Fix wait time at main counter', status: 'in_progress' },
+    { title: 'Staff briefing on hygiene standards', status: 'resolved' },
+    { title: 'Add signage for restroom directions', status: 'resolved' },
+    { title: 'Review bar noise complaints', status: 'backlog' },
+    { title: 'Update peak-hour staffing', status: 'in_progress' },
+  ]
+
+  return (
+    <MockWindow title="Manage Tasks" accent="bg-green-500">
+      {/* Status summary row */}
+      <div className="grid grid-cols-3 gap-1.5 mb-4">
+        {[
+          { label: 'Backlog', count: 1, color: 'bg-gray-100 text-gray-600' },
+          { label: 'In Progress', count: 2, color: 'bg-blue-100 text-blue-700' },
+          { label: 'Resolved', count: 2, color: 'bg-green-100 text-green-700' },
+        ].map(({ label, count, color }) => (
+          <div key={label} className={`rounded-lg p-2 text-center ${color}`}>
+            <p className="text-sm font-bold">{count}</p>
+            <p className="text-[10px] font-medium mt-0.5">{label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Resolution rate bar */}
+      <div className="mb-4">
+        <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+          <span className="font-semibold">Resolution Rate</span>
+          <span className="font-bold text-green-600">60%</span>
+        </div>
+        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-full bg-green-500 rounded-full" style={{ width: '60%' }} />
+        </div>
+      </div>
+
+      {/* Task list */}
+      <div className="space-y-2">
+        {tasks.map(({ title, status }) => (
+          <div key={title} className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
+            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+              status === 'resolved' ? 'bg-green-500' :
+              status === 'in_progress' ? 'bg-blue-500' : 'bg-gray-300'
+            }`} />
+            <span className="flex-1 text-xs text-gray-700 truncate">{title}</span>
+            <StatusChip s={status} />
+          </div>
+        ))}
+      </div>
+    </MockWindow>
+  )
+}
+
+/* ─── main page ───────────────────────────────────────────── */
 export default function LandingPage() {
   const { user, loading: authLoading, login: authLogin } = useAuth()
   const { lang, setLang, t } = useLanguage()
@@ -187,6 +386,22 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Product preview */}
+      <section className="py-20 px-6 bg-gradient-to-b from-gray-900 to-gray-800">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl font-bold text-white mb-3">{t('landingPreviewTitle')}</h2>
+            <p className="text-gray-400 text-base max-w-xl mx-auto">{t('landingPreviewSub')}</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <MockDashboard />
+            <MockAI />
+            <MockTasks />
+          </div>
+          <p className="text-center text-xs text-gray-500 mt-5">Sample data for illustration purposes</p>
+        </div>
+      </section>
+
       {/* How it works — 4 steps */}
       <section className="py-20 px-6 bg-gray-50">
         <div className="max-w-5xl mx-auto">
@@ -195,7 +410,6 @@ export default function LandingPage() {
             <p className="text-gray-500 text-base">{t('landingHowSubtitle')}</p>
           </div>
 
-          {/* Steps grid with arrows */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
             {steps.map(({ step, icon, title, desc, color }, idx) => (
               <div key={step} className="relative flex flex-col">
@@ -207,7 +421,6 @@ export default function LandingPage() {
                   <h3 className="text-sm font-semibold text-gray-900 mb-1.5">{title}</h3>
                   <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
                 </div>
-                {/* Arrow connector (hidden on last item) */}
                 {idx < steps.length - 1 && (
                   <div className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-6 items-center justify-center">
                     <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -219,7 +432,6 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* Loop indicator */}
           <div className="mt-6 flex items-center justify-center gap-2 text-xs text-gray-400 font-medium">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
