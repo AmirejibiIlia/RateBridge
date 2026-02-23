@@ -18,6 +18,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { to: '/dashboard', label: t('dashboard') },
     { to: '/qr-codes', label: t('qrCodes') },
     { to: '/feedback-list', label: t('feedback') },
+    { to: '/tasks', label: t('tasks') },
     { to: '/admin', label: t('adminSection') },
   ]
 

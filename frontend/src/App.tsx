@@ -11,6 +11,7 @@ import QRCodesPage from './pages/QRCodesPage'
 import FeedbackListPage from './pages/FeedbackListPage'
 import SuperAdminPage from './pages/SuperAdminPage'
 import AdminPage from './pages/AdminPage'
+import TasksPage from './pages/TasksPage'
 
 export default function App() {
   return (
@@ -43,6 +44,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <FeedbackListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks"
+            element={
+              <ProtectedRoute>
+                <TasksPage />
               </ProtectedRoute>
             }
           />

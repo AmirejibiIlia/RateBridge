@@ -84,3 +84,23 @@ export interface TokenResponse {
   access_token: string
   token_type: string
 }
+
+export type TaskStatus = 'backlog' | 'in_progress' | 'resolved' | 'rejected'
+
+export interface Task {
+  id: string
+  company_id: string
+  title: string
+  description: string | null
+  status: TaskStatus
+  created_at: string
+  updated_at: string
+}
+
+export interface TaskStats {
+  total: number
+  backlog: number
+  in_progress: number
+  resolved: number
+  rejected: number
+}
