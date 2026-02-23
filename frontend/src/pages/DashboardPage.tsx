@@ -1,20 +1,17 @@
-import { useState, useEffect, useCallback, KeyboardEvent } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useLanguage } from '../context/LanguageContext'
 import Layout from '../components/Layout'
 import StatsCard from '../components/StatsCard'
 import TimelineCharts from '../components/TimelineCharts'
+import AISummaryWidget from '../components/AISummaryWidget'
 import {
   getDashboard, getFeedbackHighlights, getFeedbackTimeline,
-  getQRCodes, getQRCodeStats, generateFeedbackSummary,
+  getQRCodes, getQRCodeStats,
 } from '../api/company'
 import type { CompanyStats, FeedbackStats, FeedbackHighlights, FeedbackTimeline, QRCode } from '../types'
 
 interface QRWithStats { qr: QRCode; stats: FeedbackStats }
 
-function today() { return new Date().toISOString().slice(0, 10) }
-function monthAgo() {
-  const d = new Date(); d.setMonth(d.getMonth() - 1); return d.toISOString().slice(0, 10)
-}
 function relativeTime(dateStr: string): string {
   const mins = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000)
   if (mins < 1) return 'just now'
@@ -44,14 +41,6 @@ export default function DashboardPage() {
 
   const [highlightsTab, setHighlightsTab] = useState<'top' | 'worst'>('top')
 
-  const [dateFrom, setDateFrom] = useState(monthAgo)
-  const [dateTo, setDateTo] = useState(today)
-  const [aspectInput, setAspectInput] = useState('')
-  const [aspects, setAspects] = useState<string[]>([])
-  const [summaryLoading, setSummaryLoading] = useState(false)
-  const [summaryResult, setSummaryResult] = useState<{ summary: string; feedback_count: number } | null>(null)
-  const [summaryError, setSummaryError] = useState('')
-
   useEffect(() => {
     Promise.all([getDashboard(), getFeedbackHighlights(), getFeedbackTimeline(), getQRCodes()])
       .then(async ([s, hl, tl, qrs]) => {
@@ -77,28 +66,6 @@ export default function DashboardPage() {
       .then(setTimeline)
       .finally(() => setTimelineLoading(false))
   }, [])
-
-  const addAspect = () => {
-    const val = aspectInput.trim()
-    if (val && !aspects.includes(val)) setAspects((prev) => [...prev, val])
-    setAspectInput('')
-  }
-
-  const handleGenerateSummary = async () => {
-    if (aspects.length === 0) return
-    setSummaryLoading(true)
-    setSummaryError('')
-    setSummaryResult(null)
-    try {
-      const result = await generateFeedbackSummary(dateFrom, dateTo, aspects)
-      setSummaryResult(result)
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-      setSummaryError(msg || 'Failed to generate summary.')
-    } finally {
-      setSummaryLoading(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -191,97 +158,7 @@ export default function DashboardPage() {
         {/* AI Summary + Recent Highlights */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-          {/* AI Summary */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-            <h3 className="text-base font-semibold text-gray-700">{t('aiSummary')}</h3>
-
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <label className="block text-xs font-medium text-gray-500 mb-1">{t('dateFrom')}</label>
-                <input
-                  type="date" value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="block text-xs font-medium text-gray-500 mb-1">{t('dateTo')}</label>
-                <input
-                  type="date" value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">{t('aspects')}</label>
-              <div className="flex gap-2">
-                <input
-                  type="text" value={aspectInput}
-                  onChange={(e) => setAspectInput(e.target.value)}
-                  onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                    if (e.key === 'Enter') { e.preventDefault(); addAspect() }
-                  }}
-                  placeholder={t('categoriesPlaceholder')}
-                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-                <button onClick={addAspect} className="px-3 py-1.5 text-sm border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 font-medium">
-                  +
-                </button>
-              </div>
-              {aspects.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {aspects.map((a) => (
-                    <span key={a} className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
-                      {a}
-                      <button onClick={() => setAspects((prev) => prev.filter((x) => x !== a))} className="text-gray-400 hover:text-gray-600 ml-0.5">×</button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={handleGenerateSummary}
-              disabled={summaryLoading || aspects.length === 0}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-40 transition-colors"
-            >
-              {summaryLoading ? t('generating') : t('generateSummary')}
-            </button>
-
-            {summaryError && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{summaryError}</p>
-            )}
-
-            {summaryResult && (
-              <div className="space-y-2 pt-1">
-                <p className="text-xs text-gray-400">{summaryResult.feedback_count} responses analysed</p>
-                {summaryResult.summary.split(/\n{2,}/).filter(Boolean).map((block, i) => {
-                  const lines = block.split('\n').filter(Boolean)
-                  const header = lines[0].replace(/^\[|\]$/g, '')
-                  const bullets = lines.slice(1)
-                  return (
-                    <div key={i} className="rounded-lg bg-gray-50 border border-gray-100 px-4 py-3">
-                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{header}</p>
-                      {bullets.length > 0 ? (
-                        <ul className="space-y-1">
-                          {bullets.map((b, j) => (
-                            <li key={j} className="flex gap-2 text-sm text-gray-700">
-                              <span className="text-gray-400 shrink-0">–</span>
-                              <span>{b.replace(/^[•\-]\s*/, '')}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-sm text-gray-400 italic">No mentions</p>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+          <AISummaryWidget />
 
           {/* Recent Highlights */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
