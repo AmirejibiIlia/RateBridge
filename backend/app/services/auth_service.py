@@ -52,6 +52,11 @@ class AuthService:
     def create_super_admin(self, email: str, password: str) -> User:
         existing = self.db.query(User).filter(User.email == email).first()
         if existing:
+            # Always sync password from env so changing .env takes effect on restart
+            existing.password_hash = hash_password(password)
+            existing.is_super_admin = True
+            self.db.commit()
+            self.db.refresh(existing)
             return existing
         user = User(
             email=email,
