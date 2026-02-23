@@ -151,7 +151,7 @@ const translations = {
     landingAlreadyPartner: 'Already a partner?',
     landingFooter: '© 2025 RateBridge. All rights reserved.',
     // Tasks
-    tasks: 'Tasks',
+    tasks: 'Manage Tasks',
     newTask: 'New Task',
     taskTitle: 'Title',
     taskDescription: 'Description',
@@ -174,6 +174,8 @@ const translations = {
     taskSave: 'Save',
     taskEdit: 'Edit',
     taskAddTask: 'Add Task',
+    taskResolutionRate: 'Resolution Rate',
+    taskOpenIssues: 'open issues',
   },
   de: {
     // Nav
@@ -323,7 +325,7 @@ const translations = {
     landingAlreadyPartner: 'Bereits Partner?',
     landingFooter: '© 2025 RateBridge. Alle Rechte vorbehalten.',
     // Tasks
-    tasks: 'Aufgaben',
+    tasks: 'Aufgaben verwalten',
     newTask: 'Neue Aufgabe',
     taskTitle: 'Titel',
     taskDescription: 'Beschreibung',
@@ -346,6 +348,8 @@ const translations = {
     taskSave: 'Speichern',
     taskEdit: 'Bearbeiten',
     taskAddTask: 'Aufgabe hinzufügen',
+    taskResolutionRate: 'Erledigungsrate',
+    taskOpenIssues: 'offene Aufgaben',
   },
 } as const
 

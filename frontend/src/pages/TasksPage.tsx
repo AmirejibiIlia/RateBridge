@@ -1,4 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import Layout from '../components/Layout'
 import { useLanguage } from '../context/LanguageContext'
 import { getTasks, getTaskStats, createTask, updateTask, deleteTask } from '../api/tasks'
@@ -6,23 +7,31 @@ import type { Task, TaskStats, TaskStatus } from '../types'
 
 const STATUS_ORDER: TaskStatus[] = ['backlog', 'in_progress', 'resolved', 'rejected']
 
+const STATUS_COLORS: Record<TaskStatus, string> = {
+  backlog: '#9ca3af',
+  in_progress: '#3b82f6',
+  resolved: '#22c55e',
+  rejected: '#f87171',
+}
 
-function statusStyle(status: TaskStatus): string {
-  const map: Record<TaskStatus, string> = {
-    backlog: 'bg-gray-100 text-gray-600',
-    in_progress: 'bg-blue-100 text-blue-700',
-    resolved: 'bg-green-100 text-green-700',
-    rejected: 'bg-red-100 text-red-600',
-  }
-  return map[status]
+const STATUS_STYLES: Record<TaskStatus, string> = {
+  backlog: 'bg-gray-100 text-gray-600',
+  in_progress: 'bg-blue-100 text-blue-700',
+  resolved: 'bg-green-100 text-green-700',
+  rejected: 'bg-red-100 text-red-600',
+}
+
+const STATUS_CARD: Record<TaskStatus, { bg: string; text: string; border: string; bar: string }> = {
+  backlog:     { bg: 'bg-gray-50',   text: 'text-gray-700',  border: 'border-gray-200',  bar: 'bg-gray-400'  },
+  in_progress: { bg: 'bg-blue-50',   text: 'text-blue-700',  border: 'border-blue-200',  bar: 'bg-blue-500'  },
+  resolved:    { bg: 'bg-green-50',  text: 'text-green-700', border: 'border-green-200', bar: 'bg-green-500' },
+  rejected:    { bg: 'bg-red-50',    text: 'text-red-600',   border: 'border-red-200',   bar: 'bg-red-400'   },
 }
 
 function statusDot(status: TaskStatus): string {
   const map: Record<TaskStatus, string> = {
-    backlog: 'bg-gray-400',
-    in_progress: 'bg-blue-500',
-    resolved: 'bg-green-500',
-    rejected: 'bg-red-400',
+    backlog: 'bg-gray-400', in_progress: 'bg-blue-500',
+    resolved: 'bg-green-500', rejected: 'bg-red-400',
   }
   return map[status]
 }
@@ -53,18 +62,14 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<TaskStatus | null>(null)
 
-  // Create form
   const [showCreate, setShowCreate] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
   const [newStatus, setNewStatus] = useState<TaskStatus>('backlog')
   const [creating, setCreating] = useState(false)
 
-  // Inline edit
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editState, setEditState] = useState<EditState>({ title: '', description: '' })
-
-  // Delete confirm
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const loadAll = async () => {
@@ -73,9 +78,7 @@ export default function TasksPage() {
     setStats(s)
   }
 
-  useEffect(() => {
-    loadAll().finally(() => setLoading(false))
-  }, [])
+  useEffect(() => { loadAll().finally(() => setLoading(false)) }, [])
 
   const visibleTasks = filter ? tasks.filter((t) => t.status === filter) : tasks
 
@@ -85,21 +88,15 @@ export default function TasksPage() {
     setCreating(true)
     try {
       await createTask({ title: newTitle.trim(), description: newDesc.trim() || undefined, status: newStatus })
-      setNewTitle('')
-      setNewDesc('')
-      setNewStatus('backlog')
-      setShowCreate(false)
+      setNewTitle(''); setNewDesc(''); setNewStatus('backlog'); setShowCreate(false)
       await loadAll()
-    } finally {
-      setCreating(false)
-    }
+    } finally { setCreating(false) }
   }
 
   const handleStatusChange = async (task: Task, status: TaskStatus) => {
     setTasks((prev) => prev.map((t) => t.id === task.id ? { ...t, status } : t))
     await updateTask(task.id, { status })
-    const s = await getTaskStats()
-    setStats(s)
+    setStats(await getTaskStats())
   }
 
   const startEdit = (task: Task) => {
@@ -120,13 +117,17 @@ export default function TasksPage() {
     await loadAll()
   }
 
-  const statCards = [
-    { key: null, label: t('taskFilterAll'), value: stats?.total ?? 0, color: 'text-gray-700', bg: 'bg-gray-50 border-gray-200' },
-    { key: 'backlog' as TaskStatus, label: t('taskStatusBacklog'), value: stats?.backlog ?? 0, color: 'text-gray-600', bg: 'bg-gray-50 border-gray-200' },
-    { key: 'in_progress' as TaskStatus, label: t('taskStatusInProgress'), value: stats?.in_progress ?? 0, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
-    { key: 'resolved' as TaskStatus, label: t('taskStatusResolved'), value: stats?.resolved ?? 0, color: 'text-green-700', bg: 'bg-green-50 border-green-200' },
-    { key: 'rejected' as TaskStatus, label: t('taskStatusRejected'), value: stats?.rejected ?? 0, color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
-  ]
+  // Derived analytics
+  const total = stats?.total ?? 0
+  const actionable = total - (stats?.rejected ?? 0)
+  const resolutionRate = actionable > 0 ? Math.round(((stats?.resolved ?? 0) / actionable) * 100) : 0
+  const openCount = (stats?.backlog ?? 0) + (stats?.in_progress ?? 0)
+
+  const pieData = stats
+    ? STATUS_ORDER
+        .map((s) => ({ name: statusLabel(s), value: stats[s as keyof TaskStats] as number, color: STATUS_COLORS[s] }))
+        .filter((d) => d.value > 0)
+    : []
 
   return (
     <Layout>
@@ -144,21 +145,123 @@ export default function TasksPage() {
           </button>
         </div>
 
-        {/* Analytics cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {statCards.map(({ key, label, value, color, bg }) => (
-            <button
-              key={String(key)}
-              onClick={() => setFilter(filter === key ? null : key)}
-              className={`rounded-xl border p-4 text-left transition-all ${bg} ${
-                filter === key ? 'ring-2 ring-blue-400 ring-offset-1' : 'hover:shadow-sm'
-              }`}
-            >
-              <p className="text-xs font-medium text-gray-500 mb-1">{label}</p>
-              <p className={`text-2xl font-bold ${color}`}>{value}</p>
-            </button>
-          ))}
-        </div>
+        {/* Analytics panel */}
+        {!loading && (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+
+            {/* Donut chart */}
+            <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6 flex flex-col items-center justify-center">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 self-start">{t('taskIssuesOverview')}</h3>
+              {total === 0 ? (
+                <div className="flex flex-col items-center justify-center h-40 text-gray-400">
+                  <p className="text-sm">{t('taskNoTasks')}</p>
+                </div>
+              ) : (
+                <>
+                  <div className="relative w-full" style={{ height: 200 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={62}
+                          outerRadius={88}
+                          paddingAngle={pieData.length > 1 ? 3 : 0}
+                          dataKey="value"
+                          strokeWidth={0}
+                        >
+                          {pieData.map((entry, i) => (
+                            <Cell key={i} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }}
+                          formatter={(v: number, name: string) => [v, name]}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    {/* Center label */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-3xl font-bold text-gray-900">{total}</span>
+                      <span className="text-xs text-gray-400 font-medium mt-0.5">{t('taskFilterAll').toLowerCase()}</span>
+                    </div>
+                  </div>
+
+                  {/* Legend */}
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-4 w-full">
+                    {STATUS_ORDER.map((s) => {
+                      const val = stats?.[s as keyof TaskStats] as number ?? 0
+                      return (
+                        <button
+                          key={s}
+                          onClick={() => setFilter(filter === s ? null : s)}
+                          className={`flex items-center gap-2 text-left rounded-lg px-2 py-1 transition-colors ${filter === s ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                        >
+                          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: STATUS_COLORS[s] }} />
+                          <span className="text-xs text-gray-600 flex-1">{statusLabel(s)}</span>
+                          <span className="text-xs font-bold text-gray-800">{val}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Right panel: stat cards + resolution rate */}
+            <div className="lg:col-span-3 flex flex-col gap-4">
+
+              {/* 2×2 status cards */}
+              <div className="grid grid-cols-2 gap-3">
+                {STATUS_ORDER.map((s) => {
+                  const val = stats?.[s as keyof TaskStats] as number ?? 0
+                  const pct = total > 0 ? Math.round((val / total) * 100) : 0
+                  const c = STATUS_CARD[s]
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setFilter(filter === s ? null : s)}
+                      className={`rounded-xl border p-4 text-left transition-all ${c.bg} ${c.border} ${
+                        filter === s ? 'ring-2 ring-blue-400 ring-offset-1' : 'hover:shadow-sm'
+                      }`}
+                    >
+                      <p className="text-xs font-medium text-gray-500 mb-2">{statusLabel(s)}</p>
+                      <p className={`text-3xl font-bold ${c.text}`}>{val}</p>
+                      {/* Mini bar */}
+                      <div className="mt-3 h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all ${c.bar}`} style={{ width: `${pct}%` }} />
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">{pct}% of total</p>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Resolution rate */}
+              <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-semibold text-gray-700">{t('taskResolutionRate')}</p>
+                  <span className={`text-2xl font-bold ${resolutionRate >= 70 ? 'text-green-600' : resolutionRate >= 40 ? 'text-amber-500' : 'text-red-500'}`}>
+                    {resolutionRate}%
+                  </span>
+                </div>
+                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      resolutionRate >= 70 ? 'bg-green-500' : resolutionRate >= 40 ? 'bg-amber-400' : 'bg-red-400'
+                    }`}
+                    style={{ width: `${resolutionRate}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  {stats?.resolved ?? 0} resolved · {openCount} {t('taskOpenIssues')}
+                </p>
+              </div>
+
+            </div>
+          </div>
+        )}
 
         {/* Create form */}
         {showCreate && (
@@ -198,11 +301,7 @@ export default function TasksPage() {
                 >
                   {creating ? '...' : t('taskAddTask')}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCreate(false)}
-                  className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                >
+                <button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors">
                   {t('taskCancel')}
                 </button>
               </div>
@@ -210,19 +309,20 @@ export default function TasksPage() {
           </div>
         )}
 
-        {/* Filter tabs */}
-        <div className="flex flex-wrap gap-1.5">
-          {statCards.map(({ key, label }) => (
+        {/* Filter pills */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {([null, ...STATUS_ORDER] as (TaskStatus | null)[]).map((s) => (
             <button
-              key={String(key)}
-              onClick={() => setFilter(filter === key ? null : key)}
+              key={String(s)}
+              onClick={() => setFilter(filter === s ? null : s)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                filter === key
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                filter === s ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              {label}
+              {s === null ? t('taskFilterAll') : statusLabel(s)}
+              <span className="ml-1.5 opacity-60">
+                {s === null ? total : (stats?.[s as keyof TaskStats] as number ?? 0)}
+              </span>
             </button>
           ))}
         </div>
@@ -245,7 +345,6 @@ export default function TasksPage() {
                 className="bg-white rounded-xl border border-gray-200 px-5 py-4 hover:border-gray-300 transition-colors"
               >
                 {editingId === task.id ? (
-                  /* ── Edit mode ── */
                   <div className="space-y-2">
                     <input
                       type="text"
@@ -261,27 +360,17 @@ export default function TasksPage() {
                       className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                     />
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => saveEdit(task)}
-                        className="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-                      >
+                      <button onClick={() => saveEdit(task)} className="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors">
                         {t('taskSave')}
                       </button>
-                      <button
-                        onClick={() => setEditingId(null)}
-                        className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
-                      >
+                      <button onClick={() => setEditingId(null)} className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors">
                         {t('taskCancel')}
                       </button>
                     </div>
                   </div>
                 ) : (
-                  /* ── View mode ── */
                   <div className="flex items-start gap-3">
-                    {/* Status dot */}
                     <span className={`mt-1.5 w-2.5 h-2.5 rounded-full shrink-0 ${statusDot(task.status)}`} />
-
-                    {/* Content */}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 leading-snug">{task.title}</p>
                       {task.description && (
@@ -290,18 +379,16 @@ export default function TasksPage() {
                       <p className="text-xs text-gray-400 mt-1.5">{t('taskCreated')} {relativeDate(task.created_at)}</p>
                     </div>
 
-                    {/* Status selector */}
                     <select
                       value={task.status}
                       onChange={(e) => handleStatusChange(task, e.target.value as TaskStatus)}
-                      className={`text-xs font-semibold rounded-full px-3 py-1 border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400 ${statusStyle(task.status)}`}
+                      className={`text-xs font-semibold rounded-full px-3 py-1 border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400 ${STATUS_STYLES[task.status]}`}
                     >
                       {STATUS_ORDER.map((s) => (
                         <option key={s} value={s}>{statusLabel(s)}</option>
                       ))}
                     </select>
 
-                    {/* Actions */}
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={() => startEdit(task)}
@@ -315,18 +402,8 @@ export default function TasksPage() {
                       {deletingId === task.id ? (
                         <div className="flex items-center gap-1.5 bg-red-50 rounded-lg px-2 py-1">
                           <span className="text-xs text-red-600 font-medium">{t('taskDeleteConfirm')}</span>
-                          <button
-                            onClick={() => handleDelete(task.id)}
-                            className="text-xs font-bold text-red-600 hover:text-red-800"
-                          >
-                            ✓
-                          </button>
-                          <button
-                            onClick={() => setDeletingId(null)}
-                            className="text-xs text-gray-400 hover:text-gray-600"
-                          >
-                            ✕
-                          </button>
+                          <button onClick={() => handleDelete(task.id)} className="text-xs font-bold text-red-600 hover:text-red-800">✓</button>
+                          <button onClick={() => setDeletingId(null)} className="text-xs text-gray-400 hover:text-gray-600">✕</button>
                         </div>
                       ) : (
                         <button
