@@ -80,17 +80,16 @@ function MockDashboard() {
 
       {/* Mini bar chart */}
       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Last 7 days</p>
-      <div className="flex items-end gap-1 h-16 mb-4">
+      <div className="flex items-end gap-1 mb-4" style={{ height: 56 }}>
         {[3, 7, 5, 12, 9, 15, 11].map((h, i) => (
-          <div key={i} className="flex-1 flex flex-col justify-end">
-            <div
-              className="rounded-t"
-              style={{
-                height: `${(h / 15) * 100}%`,
-                background: `hsl(${120 * (h / 15)}, 60%, 50%)`,
-              }}
-            />
-          </div>
+          <div
+            key={i}
+            className="flex-1 rounded-t"
+            style={{
+              height: `${Math.round((h / 15) * 56)}px`,
+              background: `hsl(${Math.round(120 * (h / 15))}, 55%, 48%)`,
+            }}
+          />
         ))}
       </div>
 
