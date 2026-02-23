@@ -51,8 +51,9 @@ export default function LandingPage() {
       step: '01',
       title: t('landingStep1Title'),
       desc: t('landingStep1Desc'),
+      color: 'bg-blue-50',
       icon: (
-        <svg className="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
         </svg>
@@ -62,8 +63,9 @@ export default function LandingPage() {
       step: '02',
       title: t('landingStep2Title'),
       desc: t('landingStep2Desc'),
+      color: 'bg-indigo-50',
       icon: (
-        <svg className="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg className="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3m-3 3h3m-3 3h3" />
         </svg>
       ),
@@ -72,21 +74,51 @@ export default function LandingPage() {
       step: '03',
       title: t('landingStep3Title'),
       desc: t('landingStep3Desc'),
+      color: 'bg-purple-50',
       icon: (
-        <svg className="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+        </svg>
+      ),
+    },
+    {
+      step: '04',
+      title: t('landingStep4Title'),
+      desc: t('landingStep4Desc'),
+      color: 'bg-green-50',
+      icon: (
+        <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
     },
   ]
 
-  const features = [
-    { icon: '⚡', title: t('landingF1Title'), desc: t('landingF1Desc') },
-    { icon: '📍', title: t('landingF2Title'), desc: t('landingF2Desc') },
-    { icon: '🤖', title: t('landingF3Title'), desc: t('landingF3Desc') },
-    { icon: '📈', title: t('landingF4Title'), desc: t('landingF4Desc') },
-    { icon: '🔒', title: t('landingF5Title'), desc: t('landingF5Desc') },
-    { icon: '🌍', title: t('landingF6Title'), desc: t('landingF6Desc') },
+  const pillars = [
+    {
+      name: t('landingP1Name'),
+      sub: t('landingP1Sub'),
+      color: 'border-blue-200 bg-blue-50/40',
+      accent: 'text-blue-700',
+      dot: 'bg-blue-500',
+      bullets: [t('landingP1B1'), t('landingP1B2'), t('landingP1B3'), t('landingP1B4')],
+    },
+    {
+      name: t('landingP2Name'),
+      sub: t('landingP2Sub'),
+      color: 'border-purple-200 bg-purple-50/40',
+      accent: 'text-purple-700',
+      dot: 'bg-purple-500',
+      bullets: [t('landingP2B1'), t('landingP2B2'), t('landingP2B3'), t('landingP2B4')],
+    },
+    {
+      name: t('landingP3Name'),
+      sub: t('landingP3Sub'),
+      color: 'border-green-200 bg-green-50/40',
+      accent: 'text-green-700',
+      dot: 'bg-green-500',
+      bullets: [t('landingP3B1'), t('landingP3B2'), t('landingP3B3'), t('landingP3B4')],
+    },
   ]
 
   return (
@@ -147,43 +179,78 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How it works */}
+      {/* Problem section */}
+      <section className="py-14 px-6 bg-amber-50 border-y border-amber-100">
+        <div className="max-w-2xl mx-auto text-center">
+          <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-3">{t('landingProblemTitle')}</p>
+          <p className="text-base text-gray-700 leading-relaxed">{t('landingProblemText')}</p>
+        </div>
+      </section>
+
+      {/* How it works — 4 steps */}
       <section className="py-20 px-6 bg-gray-50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-2xl font-bold text-gray-900 mb-3">{t('landingHowTitle')}</h2>
             <p className="text-gray-500 text-base">{t('landingHowSubtitle')}</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {steps.map(({ step, icon, title, desc }) => (
-              <div key={step} className="bg-white rounded-2xl border border-gray-200 p-7 relative">
-                <div className="absolute top-6 right-6 text-sm font-bold text-gray-200">{step}</div>
-                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-5">
-                  {icon}
+
+          {/* Steps grid with arrows */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
+            {steps.map(({ step, icon, title, desc, color }, idx) => (
+              <div key={step} className="relative flex flex-col">
+                <div className="bg-white rounded-2xl border border-gray-200 p-6 flex-1 relative">
+                  <div className="absolute top-4 right-4 text-xs font-bold text-gray-200">{step}</div>
+                  <div className={`w-11 h-11 ${color} rounded-xl flex items-center justify-center mb-4`}>
+                    {icon}
+                  </div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-1.5">{title}</h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
                 </div>
-                <h3 className="text-base font-semibold text-gray-900 mb-2">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+                {/* Arrow connector (hidden on last item) */}
+                {idx < steps.length - 1 && (
+                  <div className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-6 items-center justify-center">
+                    <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                )}
               </div>
             ))}
+          </div>
+
+          {/* Loop indicator */}
+          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-gray-400 font-medium">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+            {t('landingHowTitle')}
           </div>
         </div>
       </section>
 
-      {/* Features */}
+      {/* Three pillars */}
       <section className="py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-2xl font-bold text-gray-900 mb-3">{t('landingWhyTitle')}</h2>
             <p className="text-gray-500 text-base">{t('landingWhySubtitle')}</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map(({ icon, title, desc }) => (
-              <div key={title} className="flex gap-4 p-5 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
-                <span className="text-2xl shrink-0 mt-0.5">{icon}</span>
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-sm mb-1.5">{title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {pillars.map(({ name, sub, color, accent, dot, bullets }) => (
+              <div key={name} className={`rounded-2xl border p-7 ${color}`}>
+                <div className="mb-5">
+                  <span className={`text-xl font-extrabold ${accent}`}>{name}</span>
+                  <p className="text-xs text-gray-500 font-medium mt-1">{sub}</p>
                 </div>
+                <ul className="space-y-2.5">
+                  {bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-2.5">
+                      <span className={`w-1.5 h-1.5 ${dot} rounded-full mt-1.5 shrink-0`} />
+                      <span className="text-sm text-gray-700 leading-snug">{b}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>
