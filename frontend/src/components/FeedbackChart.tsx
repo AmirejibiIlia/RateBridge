@@ -1,4 +1,9 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+
+const RATING_COLORS = [
+  '#dc2626', '#ef4444', '#f97316', '#fb923c', '#fbbf24',
+  '#a3e635', '#4ade80', '#22c55e', '#16a34a', '#15803d',
+]
 
 interface Props {
   distribution: Record<string, number>
@@ -19,7 +24,11 @@ export default function FeedbackChart({ distribution }: Props) {
           <XAxis dataKey="rating" tick={{ fontSize: 13 }} />
           <YAxis allowDecimals={false} tick={{ fontSize: 13 }} />
           <Tooltip />
-          <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+            {data.map((_, i) => (
+              <Cell key={i} fill={RATING_COLORS[i]} />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>

@@ -6,9 +6,9 @@ import type { FeedbackTimeline, QRCode } from '../types'
 import { useLanguage } from '../context/LanguageContext'
 
 const RATING_COLORS: Record<string, string> = {
-  r1: '#ef4444', r2: '#f97316', r3: '#f59e0b', r4: '#eab308',
-  r5: '#84cc16', r6: '#22c55e', r7: '#10b981', r8: '#14b8a6',
-  r9: '#3b82f6', r10: '#6366f1',
+  r1:  '#dc2626', r2:  '#ef4444', r3:  '#f97316', r4:  '#fb923c',
+  r5:  '#fbbf24', r6:  '#a3e635', r7:  '#4ade80', r8:  '#22c55e',
+  r9:  '#16a34a', r10: '#15803d',
 }
 const RATINGS = ['r1','r2','r3','r4','r5','r6','r7','r8','r9','r10'] as const
 

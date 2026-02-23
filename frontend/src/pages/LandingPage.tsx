@@ -1,10 +1,12 @@
 import { useState, FormEvent, useRef } from 'react'
 import { Link, useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 import { register } from '../api/auth'
 
 export default function LandingPage() {
   const { user, loading: authLoading, login: authLogin } = useAuth()
+  const { lang, setLang } = useLanguage()
   const navigate = useNavigate()
   const formRef = useRef<HTMLDivElement>(null)
 
@@ -55,12 +57,29 @@ export default function LandingPage() {
             <img src="/logo.png" alt="RateBridge" className="w-8 h-8 rounded-lg" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
             <span className="font-bold text-gray-900 text-lg">RateBridge</span>
           </div>
-          <Link
-            to="/login"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            Sign In →
-          </Link>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 text-xs font-semibold tracking-wide">
+              <button
+                onClick={() => setLang('en')}
+                className={lang === 'en' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600 transition-colors'}
+              >
+                EN
+              </button>
+              <span className="text-gray-300">|</span>
+              <button
+                onClick={() => setLang('de')}
+                className={lang === 'de' ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600 transition-colors'}
+              >
+                DE
+              </button>
+            </div>
+            <Link
+              to="/login"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Sign In →
+            </Link>
+          </div>
         </div>
       </header>
 
