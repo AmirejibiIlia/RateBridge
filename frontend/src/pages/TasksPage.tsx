@@ -6,15 +6,6 @@ import type { Task, TaskStats, TaskStatus } from '../types'
 
 const STATUS_ORDER: TaskStatus[] = ['backlog', 'in_progress', 'resolved', 'rejected']
 
-function statusLabel(status: TaskStatus, t: (k: string) => string): string {
-  const map: Record<TaskStatus, string> = {
-    backlog: t('taskStatusBacklog'),
-    in_progress: t('taskStatusInProgress'),
-    resolved: t('taskStatusResolved'),
-    rejected: t('taskStatusRejected'),
-  }
-  return map[status]
-}
 
 function statusStyle(status: TaskStatus): string {
   const map: Record<TaskStatus, string> = {
@@ -49,6 +40,13 @@ interface EditState { title: string; description: string }
 
 export default function TasksPage() {
   const { t } = useLanguage()
+
+  const statusLabel = (status: TaskStatus): string => ({
+    backlog: t('taskStatusBacklog'),
+    in_progress: t('taskStatusInProgress'),
+    resolved: t('taskStatusResolved'),
+    rejected: t('taskStatusRejected'),
+  }[status])
 
   const [tasks, setTasks] = useState<Task[]>([])
   const [stats, setStats] = useState<TaskStats | null>(null)
@@ -190,7 +188,7 @@ export default function TasksPage() {
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {STATUS_ORDER.map((s) => (
-                    <option key={s} value={s}>{statusLabel(s, t)}</option>
+                    <option key={s} value={s}>{statusLabel(s)}</option>
                   ))}
                 </select>
                 <button
@@ -299,7 +297,7 @@ export default function TasksPage() {
                       className={`text-xs font-semibold rounded-full px-3 py-1 border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400 ${statusStyle(task.status)}`}
                     >
                       {STATUS_ORDER.map((s) => (
-                        <option key={s} value={s}>{statusLabel(s, t)}</option>
+                        <option key={s} value={s}>{statusLabel(s)}</option>
                       ))}
                     </select>
 
