@@ -269,6 +269,24 @@ Rules:
         summary = resp.json()["choices"][0]["message"]["content"].strip()
         return FeedbackSummaryResponse(summary=summary, feedback_count=len(feedbacks))
 
+    def get_global_timeline(self) -> list[dict]:
+        now = datetime.now(timezone.utc)
+        since = now - timedelta(days=29)
+        feedbacks = (
+            self.db.query(Feedback)
+            .filter(Feedback.created_at >= since)
+            .all()
+        )
+        daily_map: dict[str, int] = {}
+        for i in range(30):
+            day = (now - timedelta(days=29 - i)).strftime("%b %d")
+            daily_map[day] = 0
+        for fb in feedbacks:
+            day = fb.created_at.strftime("%b %d")
+            if day in daily_map:
+                daily_map[day] += 1
+        return [{"date": d, "count": c} for d, c in daily_map.items()]
+
     def list_all(self, page: int = 1, page_size: int = 50) -> list[FeedbackOut]:
         offset = (page - 1) * page_size
         feedbacks = (

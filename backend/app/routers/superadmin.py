@@ -25,3 +25,8 @@ def all_feedback(
     db: Session = Depends(get_db),
 ):
     return FeedbackService(db).list_all(page=page, page_size=page_size)
+
+
+@router.get("/timeline")
+def global_timeline(current_user: User = Depends(require_super_admin), db: Session = Depends(get_db)):
+    return FeedbackService(db).get_global_timeline()
