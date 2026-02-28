@@ -39,8 +39,8 @@ export default function LoginPage() {
             </svg>
             <span className="font-bold text-gray-900">RateBridge</span>
           </Link>
-          <Link to="/register" className="text-sm font-medium text-blue-600 hover:underline">
-            {t('registerCompany')}
+          <Link to="/" className="text-sm font-medium text-blue-600 hover:underline">
+            Request Partnership
           </Link>
         </div>
       </header>
@@ -86,9 +86,9 @@ export default function LoginPage() {
             </button>
           </form>
           <p className="text-center text-sm text-gray-500 mt-6">
-            {t('noAccount')}{' '}
-            <Link to="/register" className="text-blue-600 hover:underline font-medium">
-              {t('registerCompany')}
+            Not a partner yet?{' '}
+            <Link to="/" className="text-blue-600 hover:underline font-medium">
+              Request partnership
             </Link>
           </p>
         </div>
