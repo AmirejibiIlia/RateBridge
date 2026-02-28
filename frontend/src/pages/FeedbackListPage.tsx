@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback, KeyboardEvent } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import * as XLSX from 'xlsx'
 import Layout from '../components/Layout'
 import { useLanguage } from '../context/LanguageContext'
-import { getFeedback, generateFeedbackSummary } from '../api/company'
-import type { Feedback } from '../types'
+import { getFeedback, getQRCodes } from '../api/company'
+import type { FeedbackFilters } from '../api/company'
+import type { Feedback, QRCode } from '../types'
 
 const RATING_COLORS: Record<number, string> = {
   1: 'text-red-600', 2: 'text-red-500', 3: 'text-orange-500', 4: 'text-orange-400',
@@ -10,243 +12,292 @@ const RATING_COLORS: Record<number, string> = {
   9: 'text-green-600', 10: 'text-emerald-600',
 }
 
-function today() {
-  return new Date().toISOString().slice(0, 10)
-}
+const PAGE_SIZE = 20
 
-function monthAgo() {
-  const d = new Date()
-  d.setMonth(d.getMonth() - 1)
-  return d.toISOString().slice(0, 10)
+type SortCol = 'date' | 'rating'
+type SortDir = 'asc' | 'desc'
+
+function SortIcon({ col, active, dir }: { col: SortCol; active: boolean; dir: SortDir }) {
+  return (
+    <span className={`inline-flex flex-col ml-1 leading-none ${active ? 'text-blue-600' : 'text-gray-300'}`}>
+      <svg className={`w-2.5 h-2.5 -mb-0.5 ${active && dir === 'asc' ? 'text-blue-600' : ''}`} viewBox="0 0 10 6" fill="currentColor">
+        <path d="M5 0L10 6H0z" />
+      </svg>
+      <svg className={`w-2.5 h-2.5 ${active && dir === 'desc' ? 'text-blue-600' : ''}`} viewBox="0 0 10 6" fill="currentColor">
+        <path d="M5 6L0 0H10z" />
+      </svg>
+    </span>
+  )
 }
 
 export default function FeedbackListPage() {
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
-  const [page, setPage] = useState(1)
-  const [loading, setLoading] = useState(true)
-  const [hasMore, setHasMore] = useState(true)
   const { t } = useLanguage()
 
-  // AI Summary state
-  const [summaryOpen, setSummaryOpen] = useState(false)
-  const [dateFrom, setDateFrom] = useState(monthAgo())
-  const [dateTo, setDateTo] = useState(today())
-  const [categoryInput, setCategoryInput] = useState('')
-  const [categories, setCategories] = useState<string[]>([])
-  const [summaryLoading, setSummaryLoading] = useState(false)
-  const [summaryResult, setSummaryResult] = useState<{ summary: string; feedback_count: number } | null>(null)
-  const [summaryError, setSummaryError] = useState('')
+  // QR codes for dropdown
+  const [qrCodes, setQrCodes] = useState<QRCode[]>([])
 
-  const PAGE_SIZE = 20
+  // Filter state
+  const [qrId, setQrId] = useState('')
+  const [ratingMin, setRatingMin] = useState(1)
+  const [ratingMax, setRatingMax] = useState(10)
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [hasComment, setHasComment] = useState<'' | 'true' | 'false'>('')
 
-  const load = useCallback(async (p: number) => {
-    setLoading(true)
-    try {
-      const data = await getFeedback(p, PAGE_SIZE)
-      if (p === 1) {
-        setFeedbacks(data)
-      } else {
-        setFeedbacks((prev) => [...prev, ...data])
-      }
-      setHasMore(data.length === PAGE_SIZE)
-    } finally {
-      setLoading(false)
-    }
+  // Sort state
+  const [sortBy, setSortBy] = useState<SortCol>('date')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+
+  // Data state
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [loading, setLoading] = useState(true)
+  const [exporting, setExporting] = useState(false)
+
+  useEffect(() => {
+    getQRCodes().then(setQrCodes).catch(() => {})
   }, [])
 
+  const buildFilters = useCallback(
+    (p: number): FeedbackFilters => ({
+      page: p,
+      page_size: PAGE_SIZE,
+      ...(qrId ? { qr_id: qrId } : {}),
+      rating_min: ratingMin,
+      rating_max: ratingMax,
+      ...(dateFrom ? { date_from: dateFrom } : {}),
+      ...(dateTo ? { date_to: dateTo } : {}),
+      ...(hasComment !== '' ? { has_comment: hasComment === 'true' } : {}),
+      sort_by: sortBy,
+      sort_dir: sortDir,
+    }),
+    [qrId, ratingMin, ratingMax, dateFrom, dateTo, hasComment, sortBy, sortDir]
+  )
+
+  const load = useCallback(
+    async (p: number) => {
+      setLoading(true)
+      try {
+        const { items, total: t } = await getFeedback(buildFilters(p))
+        setFeedbacks(items)
+        setTotal(t)
+        setPage(p)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [buildFilters]
+  )
+
+  // Reset to page 1 whenever filters/sort change
   useEffect(() => {
     load(1)
   }, [load])
 
-  const handleLoadMore = () => {
-    const next = page + 1
-    setPage(next)
-    load(next)
-  }
-
-  const addCategory = () => {
-    const val = categoryInput.trim()
-    if (val && !categories.includes(val)) {
-      setCategories((prev) => [...prev, val])
-    }
-    setCategoryInput('')
-  }
-
-  const handleCategoryKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault()
-      addCategory()
+  const handleSort = (col: SortCol) => {
+    if (sortBy === col) {
+      setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))
+    } else {
+      setSortBy(col)
+      setSortDir('desc')
     }
   }
 
-  const removeCategory = (cat: string) => {
-    setCategories((prev) => prev.filter((c) => c !== cat))
+  const resetFilters = () => {
+    setQrId('')
+    setRatingMin(1)
+    setRatingMax(10)
+    setDateFrom('')
+    setDateTo('')
+    setHasComment('')
   }
 
-  const handleGenerateSummary = async () => {
-    if (categories.length === 0) return
-    setSummaryLoading(true)
-    setSummaryError('')
-    setSummaryResult(null)
+  const handleExport = async () => {
+    setExporting(true)
     try {
-      const result = await generateFeedbackSummary(dateFrom, dateTo, categories)
-      setSummaryResult(result)
-    } catch (err: any) {
-      const msg = err?.response?.data?.detail || 'Failed to generate summary.'
-      setSummaryError(msg)
+      const { items } = await getFeedback({ ...buildFilters(1), page: 1, page_size: 5000 })
+      const rows = items.map((fb) => ({
+        Rating: fb.rating,
+        'QR Name': fb.qr_label ?? '',
+        Comment: fb.comment ?? '',
+        Date: new Date(fb.created_at).toLocaleString(),
+      }))
+      const ws = XLSX.utils.json_to_sheet(rows)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Feedback')
+      const date = new Date().toISOString().slice(0, 10)
+      XLSX.writeFile(wb, `feedback-${date}.xlsx`)
     } finally {
-      setSummaryLoading(false)
+      setExporting(false)
     }
   }
+
+  const totalPages = Math.ceil(total / PAGE_SIZE)
+  const isFiltered =
+    qrId !== '' || ratingMin !== 1 || ratingMax !== 10 || dateFrom !== '' || dateTo !== '' || hasComment !== ''
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">{t('allFeedback')}</h1>
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900">{t('allFeedback')}</h1>
+            {!loading && (
+              <span className="text-sm text-gray-400 font-medium">
+                {total} {total === 1 ? 'entry' : 'entries'}
+              </span>
+            )}
+          </div>
           <button
-            onClick={() => { setSummaryOpen((v) => !v); setSummaryResult(null); setSummaryError('') }}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold rounded-lg hover:from-violet-700 hover:to-indigo-700 transition-all shadow-sm"
+            onClick={handleExport}
+            disabled={exporting || total === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
           >
-            <span>✨</span>
-            {t('aiSummary')}
+            {exporting ? (
+              <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            ) : (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            )}
+            Export Excel
           </button>
         </div>
 
-        {/* AI Summary Panel */}
-        {summaryOpen && (
-          <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-200 rounded-xl p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-violet-800 uppercase tracking-wide">✨ {t('aiSummary')}</h2>
+        {/* Filter bar */}
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <div className="flex flex-wrap gap-3 items-end">
+            {/* QR filter */}
+            <div className="min-w-[160px]">
+              <label className="block text-xs font-medium text-gray-500 mb-1">QR Code</label>
+              <select
+                value={qrId}
+                onChange={(e) => setQrId(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                <option value="">All QR Codes</option>
+                {qrCodes.map((q) => (
+                  <option key={q.id} value={q.id}>{q.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Rating range */}
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Rating</label>
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={ratingMin}
+                  onChange={(e) => setRatingMin(Number(e.target.value))}
+                  className="border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white w-16"
+                >
+                  {[1,2,3,4,5,6,7,8,9,10].map((n) => (
+                    <option key={n} value={n} disabled={n > ratingMax}>{n}</option>
+                  ))}
+                </select>
+                <span className="text-gray-400 text-xs">–</span>
+                <select
+                  value={ratingMax}
+                  onChange={(e) => setRatingMax(Number(e.target.value))}
+                  className="border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white w-16"
+                >
+                  {[1,2,3,4,5,6,7,8,9,10].map((n) => (
+                    <option key={n} value={n} disabled={n < ratingMin}>{n}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
             {/* Date range */}
-            <div className="flex flex-wrap gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">{t('dateFrom')}</label>
-                <input
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">{t('dateTo')}</label>
-                <input
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white"
-                />
-              </div>
-            </div>
-
-            {/* Categories */}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">{t('categoriesLabel')}</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={categoryInput}
-                  onChange={(e) => setCategoryInput(e.target.value)}
-                  onKeyDown={handleCategoryKeyDown}
-                  placeholder={t('categoriesPlaceholder')}
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white"
-                />
-                <button
-                  onClick={addCategory}
-                  className="px-3 py-1.5 text-sm bg-white border border-violet-300 text-violet-700 rounded-lg hover:bg-violet-50 font-medium"
-                >
-                  +
-                </button>
-              </div>
-              {categories.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {categories.map((cat) => (
-                    <span
-                      key={cat}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-violet-100 text-violet-800 text-xs font-medium rounded-full"
-                    >
-                      {cat}
-                      <button onClick={() => removeCategory(cat)} className="hover:text-violet-600 ml-0.5">×</button>
-                    </span>
-                  ))}
-                  <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded-full">
-                    + Other
-                  </span>
-                </div>
-              )}
+              <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              />
             </div>
 
-            {/* Generate button */}
-            <button
-              onClick={handleGenerateSummary}
-              disabled={summaryLoading || categories.length === 0}
-              className="px-5 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold rounded-lg hover:from-violet-700 hover:to-indigo-700 disabled:opacity-50 transition-all shadow-sm"
-            >
-              {summaryLoading ? (
-                <span className="flex items-center gap-2">
-                  <span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  {t('generating')}
-                </span>
-              ) : t('generateSummary')}
-            </button>
+            {/* Has comment */}
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Comment</label>
+              <select
+                value={hasComment}
+                onChange={(e) => setHasComment(e.target.value as '' | 'true' | 'false')}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                <option value="">All</option>
+                <option value="true">With comment</option>
+                <option value="false">No comment</option>
+              </select>
+            </div>
 
-            {/* Error */}
-            {summaryError && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-                {summaryError}
-              </div>
-            )}
-
-            {/* Result */}
-            {summaryResult && (
-              <div className="bg-white border border-violet-200 rounded-xl p-5 space-y-3 shadow-sm">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-sm font-semibold text-violet-800">{t('summaryTitle')}</h3>
-                  <span className="text-xs text-gray-400">{summaryResult.feedback_count} responses analysed</span>
-                </div>
-                {summaryResult.summary.split(/\n{2,}/).filter(Boolean).map((block, i) => {
-                  const lines = block.split('\n').filter(Boolean)
-                  const header = lines[0].replace(/^\[|\]$/g, '')
-                  const bullets = lines.slice(1)
-                  return (
-                    <div key={i} className="rounded-lg bg-violet-50 border border-violet-100 px-4 py-3">
-                      <p className="text-xs font-bold text-violet-700 uppercase tracking-wider mb-2">{header}</p>
-                      {bullets.length > 0 ? (
-                        <ul className="space-y-1">
-                          {bullets.map((b, j) => (
-                            <li key={j} className="flex gap-2 text-sm text-gray-700">
-                              <span className="text-violet-400 shrink-0">•</span>
-                              <span>{b.replace(/^[•\-]\s*/, '')}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-sm text-gray-400 italic">No mentions</p>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
+            {/* Clear */}
+            {isFiltered && (
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Clear
+              </button>
             )}
           </div>
-        )}
+        </div>
 
-        {/* Feedback table */}
+        {/* Table */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          {feedbacks.length === 0 && !loading ? (
+          {loading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-blue-600" />
+            </div>
+          ) : feedbacks.length === 0 ? (
             <div className="text-center py-16 text-gray-400">
-              <p className="text-lg">{t('noFeedbackYet')}</p>
-              <p className="text-sm mt-1">{t('shareQRCodes')}</p>
+              <p className="text-base font-medium">{t('noFeedbackYet')}</p>
+              {isFiltered && (
+                <button onClick={resetFilters} className="mt-3 text-sm text-blue-600 hover:underline">
+                  Clear filters
+                </button>
+              )}
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('rating')}</th>
+                  <th
+                    className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase cursor-pointer select-none hover:text-gray-800 transition-colors"
+                    onClick={() => handleSort('rating')}
+                  >
+                    <span className="flex items-center">
+                      {t('rating')}
+                      <SortIcon col="rating" active={sortBy === 'rating'} dir={sortDir} />
+                    </span>
+                  </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('qrName')}</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('comment')}</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('date')}</th>
+                  <th
+                    className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase cursor-pointer select-none hover:text-gray-800 transition-colors"
+                    onClick={() => handleSort('date')}
+                  >
+                    <span className="flex items-center">
+                      {t('date')}
+                      <SortIcon col="date" active={sortBy === 'date'} dir={sortDir} />
+                    </span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -273,20 +324,73 @@ export default function FeedbackListPage() {
           )}
         </div>
 
-        {loading && (
-          <div className="flex justify-center py-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-          </div>
-        )}
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-400">
+              Page {page} of {totalPages} · {total} results
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => load(1)}
+                disabled={page === 1 || loading}
+                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 disabled:opacity-30 transition-colors"
+                title="First page"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => load(page - 1)}
+                disabled={page === 1 || loading}
+                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 disabled:opacity-30 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
 
-        {!loading && hasMore && (
-          <div className="flex justify-center">
-            <button
-              onClick={handleLoadMore}
-              className="px-6 py-2 text-sm font-medium text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
-            >
-              {t('loadMore')}
-            </button>
+              {/* Page number pills */}
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                const start = Math.max(1, Math.min(page - 2, totalPages - 4))
+                const p = start + i
+                return (
+                  <button
+                    key={p}
+                    onClick={() => load(p)}
+                    disabled={loading}
+                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                      p === page
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-500 hover:bg-gray-100'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              })}
+
+              <button
+                onClick={() => load(page + 1)}
+                disabled={page === totalPages || loading}
+                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 disabled:opacity-30 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => load(totalPages)}
+                disabled={page === totalPages || loading}
+                className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 disabled:opacity-30 transition-colors"
+                title="Last page"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
           </div>
         )}
       </div>

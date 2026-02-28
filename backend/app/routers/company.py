@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -55,12 +55,36 @@ def dashboard(current_user: User = Depends(require_company_user), db: Session = 
 
 @router.get("/feedback", response_model=list[FeedbackOut])
 def feedback_list(
+    response: Response,
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=5000),
+    qr_id: str | None = Query(None),
+    rating_min: int | None = Query(None, ge=1, le=10),
+    rating_max: int | None = Query(None, ge=1, le=10),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    has_comment: bool | None = Query(None),
+    sort_by: str = Query("date", pattern="^(date|rating)$"),
+    sort_dir: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(require_company_user),
     db: Session = Depends(get_db),
 ):
-    return FeedbackService(db).list(current_user.company_id, page=page, page_size=page_size)
+    items, total = FeedbackService(db).list(
+        current_user.company_id,
+        page=page,
+        page_size=page_size,
+        qr_id=qr_id,
+        rating_min=rating_min,
+        rating_max=rating_max,
+        date_from=date_from,
+        date_to=date_to,
+        has_comment=has_comment,
+        sort_by=sort_by,
+        sort_dir=sort_dir,
+    )
+    response.headers["X-Total-Count"] = str(total)
+    response.headers["Access-Control-Expose-Headers"] = "X-Total-Count"
+    return items
 
 
 @router.get("/feedback/stats", response_model=FeedbackStats)

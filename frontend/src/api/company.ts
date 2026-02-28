@@ -13,8 +13,24 @@ export const updateLogo = (logo_base64: string) =>
 export const getDashboard = () =>
   client.get<CompanyStats>('/api/company/dashboard').then((r) => r.data)
 
-export const getFeedback = (page = 1, page_size = 20) =>
-  client.get<Feedback[]>('/api/company/feedback', { params: { page, page_size } }).then((r) => r.data)
+export interface FeedbackFilters {
+  page?: number
+  page_size?: number
+  qr_id?: string
+  rating_min?: number
+  rating_max?: number
+  date_from?: string
+  date_to?: string
+  has_comment?: boolean
+  sort_by?: 'date' | 'rating'
+  sort_dir?: 'asc' | 'desc'
+}
+
+export const getFeedback = (filters: FeedbackFilters = {}) =>
+  client.get<Feedback[]>('/api/company/feedback', { params: { page: 1, page_size: 20, ...filters } }).then((r) => ({
+    items: r.data,
+    total: parseInt(r.headers['x-total-count'] ?? '0', 10),
+  }))
 
 export const getFeedbackStats = () =>
   client.get('/api/company/feedback/stats').then((r) => r.data)

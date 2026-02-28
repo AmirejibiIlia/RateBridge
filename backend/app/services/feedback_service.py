@@ -52,17 +52,53 @@ class FeedbackService:
         self.db.refresh(fb)
         return FeedbackOut.model_validate(fb)
 
-    def list(self, company_id: str, page: int = 1, page_size: int = 20) -> list[FeedbackOut]:
+    def list(
+        self,
+        company_id: str,
+        page: int = 1,
+        page_size: int = 20,
+        qr_id: str | None = None,
+        rating_min: int | None = None,
+        rating_max: int | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+        has_comment: bool | None = None,
+        sort_by: str = "date",
+        sort_dir: str = "desc",
+    ) -> list[FeedbackOut]:
+        q = self.db.query(Feedback).filter(Feedback.company_id == company_id)
+
+        if qr_id:
+            q = q.filter(Feedback.qr_code_id == qr_id)
+        if rating_min is not None:
+            q = q.filter(Feedback.rating >= rating_min)
+        if rating_max is not None:
+            q = q.filter(Feedback.rating <= rating_max)
+        if date_from:
+            try:
+                df = datetime.strptime(date_from, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                q = q.filter(Feedback.created_at >= df)
+            except ValueError:
+                pass
+        if date_to:
+            try:
+                dt = datetime.strptime(date_to, "%Y-%m-%d").replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
+                q = q.filter(Feedback.created_at <= dt)
+            except ValueError:
+                pass
+        if has_comment is True:
+            q = q.filter(Feedback.comment.isnot(None), Feedback.comment != "")
+        elif has_comment is False:
+            q = q.filter((Feedback.comment.is_(None)) | (Feedback.comment == ""))
+
+        col = Feedback.created_at if sort_by == "date" else Feedback.rating
+        q = q.order_by(col.asc() if sort_dir == "asc" else col.desc())
+
+        total = q.count()
         offset = (page - 1) * page_size
-        feedbacks = (
-            self.db.query(Feedback)
-            .filter(Feedback.company_id == company_id)
-            .order_by(Feedback.created_at.desc())
-            .offset(offset)
-            .limit(page_size)
-            .all()
-        )
-        return [
+        feedbacks = q.offset(offset).limit(page_size).all()
+
+        items = [
             FeedbackOut(
                 id=f.id,
                 qr_code_id=f.qr_code_id,
@@ -75,6 +111,7 @@ class FeedbackService:
             )
             for f in feedbacks
         ]
+        return items, total
 
     def get_stats(self, company_id: str) -> FeedbackStats:
         total = self.db.query(func.count(Feedback.id)).filter(
