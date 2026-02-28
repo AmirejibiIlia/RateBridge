@@ -6,8 +6,10 @@ from app.core.dependencies import require_super_admin
 from app.models.user import User
 from app.schemas.company import CompanyStats
 from app.schemas.feedback import FeedbackOut
+from app.schemas.partnership import PartnershipRequestOut, RegisterCompanyFromRequest
 from app.services.company_service import CompanyService
 from app.services.feedback_service import FeedbackService
+from app.services.partnership_service import PartnershipService
 
 router = APIRouter(prefix="/api/superadmin", tags=["superadmin"])
 
@@ -30,3 +32,30 @@ def all_feedback(
 @router.get("/timeline")
 def global_timeline(current_user: User = Depends(require_super_admin), db: Session = Depends(get_db)):
     return FeedbackService(db).get_global_timeline()
+
+
+@router.get("/partnership-requests", response_model=list[PartnershipRequestOut])
+def list_partnership_requests(
+    current_user: User = Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    return PartnershipService(db).list_requests()
+
+
+@router.post("/partnership-requests/{request_id}/approve")
+def approve_partnership_request(
+    request_id: str,
+    data: RegisterCompanyFromRequest,
+    current_user: User = Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    return PartnershipService(db).approve_request(request_id, data)
+
+
+@router.delete("/partnership-requests/{request_id}")
+def delete_partnership_request(
+    request_id: str,
+    current_user: User = Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    return PartnershipService(db).delete_request(request_id)

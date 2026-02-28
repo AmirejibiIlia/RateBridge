@@ -7,7 +7,7 @@ from sqlalchemy import text
 from app.config import settings
 from app.database import engine
 from app.models import Base
-from app.routers import auth, company, feedback, superadmin, tasks
+from app.routers import auth, company, feedback, superadmin, tasks, partnership
 
 
 @asynccontextmanager
@@ -49,6 +49,7 @@ app.include_router(company.router)
 app.include_router(feedback.router)
 app.include_router(superadmin.router)
 app.include_router(tasks.router)
+app.include_router(partnership.router)
 
 
 @app.get("/health")

@@ -4,7 +4,6 @@ import { LanguageProvider } from './context/LanguageContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
 import FeedbackPage from './pages/FeedbackPage'
 import DashboardPage from './pages/DashboardPage'
 import QRCodesPage from './pages/QRCodesPage'
@@ -21,7 +20,6 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
           <Route path="/feedback/:uuid" element={<FeedbackPage />} />
           <Route
             path="/dashboard"

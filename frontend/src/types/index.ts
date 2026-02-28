@@ -85,6 +85,15 @@ export interface TokenResponse {
   token_type: string
 }
 
+export interface PartnershipRequest {
+  id: string
+  company_name: string
+  email: string
+  phone: string
+  status: 'pending' | 'approved' | 'rejected'
+  created_at: string
+}
+
 export type TaskStatus = 'backlog' | 'in_progress' | 'resolved' | 'rejected'
 
 export interface Task {

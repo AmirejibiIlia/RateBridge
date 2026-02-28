@@ -1,8 +1,8 @@
 import { useState, FormEvent, useRef } from 'react'
-import { Link, useNavigate, Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
-import { register } from '../api/auth'
+import { submitPartnershipRequest } from '../api/partnership'
 
 /* ─── tiny helpers ────────────────────────────────────────── */
 function RatingBadge({ v }: { v: number }) {
@@ -203,16 +203,16 @@ function MockTasks() {
 
 /* ─── main page ───────────────────────────────────────────── */
 export default function LandingPage() {
-  const { user, loading: authLoading, login: authLogin } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { lang, setLang, t } = useLanguage()
-  const navigate = useNavigate()
   const formRef = useRef<HTMLDivElement>(null)
 
   const [companyName, setCompanyName] = useState('')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [phone, setPhone] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
   if (authLoading) {
     return (
@@ -229,12 +229,11 @@ export default function LandingPage() {
     setError('')
     setLoading(true)
     try {
-      const data = await register(companyName, email, password)
-      await authLogin(data.access_token)
-      navigate('/dashboard')
+      await submitPartnershipRequest({ company_name: companyName, email, phone })
+      setSubmitted(true)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-      setError(msg || 'Registration failed. Please try again.')
+      setError(msg || 'Failed to submit request. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -468,7 +467,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Registration / Partnership form */}
+      {/* Partnership request form */}
       <section ref={formRef} className="py-24 px-6 bg-gray-50">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
@@ -476,60 +475,75 @@ export default function LandingPage() {
             <p className="text-gray-500 text-sm leading-relaxed">{t('landingFormSubtitle')}</p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                  {error}
+            {submitted ? (
+              <div className="text-center py-6">
+                <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
-              )}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('companyName')}</label>
-                <input
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Acme Corp"
-                />
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Request Submitted!</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  Thank you for your interest. Our team will review your request and get back to you with your login credentials.
+                </p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('email')}</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="you@company.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('password')}</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={t('landingPasswordPlaceholder')}
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors mt-2"
-              >
-                {loading ? t('creatingAccount') : t('createAccount')}
-              </button>
-            </form>
-            <p className="text-center text-sm text-gray-500 mt-6">
-              {t('landingAlreadyPartner')}{' '}
-              <Link to="/login" className="text-blue-600 hover:underline font-medium">
-                {t('signIn')}
-              </Link>
-            </p>
+            ) : (
+              <>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                      {error}
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('companyName')}</label>
+                    <input
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      required
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Acme Corp"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('email')}</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="you@company.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="+1 (555) 000-0000"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors mt-2"
+                  >
+                    {loading ? 'Submitting...' : 'Request Partnership'}
+                  </button>
+                </form>
+                <p className="text-center text-sm text-gray-500 mt-6">
+                  {t('landingAlreadyPartner')}{' '}
+                  <Link to="/login" className="text-blue-600 hover:underline font-medium">
+                    {t('signIn')}
+                  </Link>
+                </p>
+              </>
+            )}
           </div>
         </div>
       </section>
