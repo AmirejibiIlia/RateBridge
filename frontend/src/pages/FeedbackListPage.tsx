@@ -17,7 +17,7 @@ const PAGE_SIZE = 20
 type SortCol = 'date' | 'rating'
 type SortDir = 'asc' | 'desc'
 
-function SortIcon({ col, active, dir }: { col: SortCol; active: boolean; dir: SortDir }) {
+function SortIcon({ active, dir }: { col: SortCol; active: boolean; dir: SortDir }) {
   return (
     <span className={`inline-flex flex-col ml-1 leading-none ${active ? 'text-blue-600' : 'text-gray-300'}`}>
       <svg className={`w-2.5 h-2.5 -mb-0.5 ${active && dir === 'asc' ? 'text-blue-600' : ''}`} viewBox="0 0 10 6" fill="currentColor">
