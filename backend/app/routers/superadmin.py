@@ -34,6 +34,14 @@ def global_timeline(current_user: User = Depends(require_super_admin), db: Sessi
     return FeedbackService(db).get_global_timeline()
 
 
+@router.get("/partnership-requests/pending-count")
+def partnership_pending_count(
+    current_user: User = Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    return {"count": PartnershipService(db).pending_count()}
+
+
 @router.get("/partnership-requests", response_model=list[PartnershipRequestOut])
 def list_partnership_requests(
     current_user: User = Depends(require_super_admin),

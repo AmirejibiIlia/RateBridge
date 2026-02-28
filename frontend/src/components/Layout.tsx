@@ -1,13 +1,20 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../context/LanguageContext'
+import { getPartnershipPendingCount } from '../api/superadmin'
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth()
   const { t } = useLanguage()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [pendingRequests, setPendingRequests] = useState(0)
+
+  useEffect(() => {
+    if (!user?.is_super_admin) return
+    getPartnershipPendingCount().then(setPendingRequests).catch(() => {})
+  }, [user])
 
   const handleLogout = () => {
     logout()
@@ -49,19 +56,40 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </NavLink>
         ))}
         {user?.is_super_admin && (
-          <NavLink
-            to="/superadmin"
-            onClick={() => setSidebarOpen(false)}
-            className={({ isActive }) =>
-              `block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-purple-50 text-purple-700'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-              }`
-            }
-          >
-            {t('superAdmin')}
-          </NavLink>
+          <>
+            <NavLink
+              to="/superadmin"
+              onClick={() => setSidebarOpen(false)}
+              className={({ isActive }) =>
+                `block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-purple-50 text-purple-700'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`
+              }
+            >
+              {t('superAdmin')}
+            </NavLink>
+            <NavLink
+              to="/partnership-requests"
+              onClick={() => setSidebarOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-purple-50 text-purple-700'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`
+              }
+            >
+              <span>Requests</span>
+              {pendingRequests > 0 && (
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600" />
+                </span>
+              )}
+            </NavLink>
+          </>
         )}
       </nav>
 

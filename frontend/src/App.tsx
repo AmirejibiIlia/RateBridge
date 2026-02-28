@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage'
 import QRCodesPage from './pages/QRCodesPage'
 import FeedbackListPage from './pages/FeedbackListPage'
 import SuperAdminPage from './pages/SuperAdminPage'
+import PartnershipRequestsPage from './pages/PartnershipRequestsPage'
 import AdminPage from './pages/AdminPage'
 import TasksPage from './pages/TasksPage'
 
@@ -66,6 +67,14 @@ export default function App() {
             element={
               <ProtectedRoute superAdminOnly>
                 <SuperAdminPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/partnership-requests"
+            element={
+              <ProtectedRoute superAdminOnly>
+                <PartnershipRequestsPage />
               </ProtectedRoute>
             }
           />

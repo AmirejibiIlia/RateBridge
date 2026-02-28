@@ -10,6 +10,9 @@ export const getAllFeedback = (page = 1, page_size = 50) =>
 export const getGlobalTimeline = () =>
   client.get<{ date: string; count: number }[]>('/api/superadmin/timeline').then((r) => r.data)
 
+export const getPartnershipPendingCount = () =>
+  client.get<{ count: number }>('/api/superadmin/partnership-requests/pending-count').then((r) => r.data.count)
+
 export const getPartnershipRequests = () =>
   client.get<PartnershipRequest[]>('/api/superadmin/partnership-requests').then((r) => r.data)
 

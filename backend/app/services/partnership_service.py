@@ -22,6 +22,21 @@ class PartnershipService:
         self.db = db
 
     def create_request(self, data: PartnershipRequestCreate) -> PartnershipRequest:
+        if self.db.query(User).filter(User.email == data.email).first():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This email is already registered as an account.",
+            )
+        existing = (
+            self.db.query(PartnershipRequest)
+            .filter(PartnershipRequest.email == data.email, PartnershipRequest.status == "pending")
+            .first()
+        )
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A partnership request with this email is already pending.",
+            )
         req = PartnershipRequest(
             company_name=data.company_name,
             email=data.email,
@@ -32,6 +47,13 @@ class PartnershipService:
         self.db.commit()
         self.db.refresh(req)
         return req
+
+    def pending_count(self) -> int:
+        return (
+            self.db.query(PartnershipRequest)
+            .filter(PartnershipRequest.status == "pending")
+            .count()
+        )
 
     def list_requests(self) -> list[PartnershipRequest]:
         return (
