@@ -7,7 +7,7 @@ from sqlalchemy import text
 from app.config import settings
 from app.database import engine
 from app.models import Base
-from app.routers import auth, company, feedback, superadmin, tasks, partnership
+from app.routers import auth, company, feedback, superadmin, tasks, partnership, employees
 
 
 @asynccontextmanager
@@ -18,6 +18,7 @@ async def lifespan(app: FastAPI):
     # Add new columns to existing tables (safe migrations)
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS logo_base64 TEXT"))
+        conn.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assigned_to_id VARCHAR REFERENCES employees(id) ON DELETE SET NULL"))
         conn.commit()
 
     # Bootstrap super admin
@@ -50,6 +51,7 @@ app.include_router(feedback.router)
 app.include_router(superadmin.router)
 app.include_router(tasks.router)
 app.include_router(partnership.router)
+app.include_router(employees.router)
 
 
 @app.get("/health")

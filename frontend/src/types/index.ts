@@ -94,6 +94,14 @@ export interface PartnershipRequest {
   created_at: string
 }
 
+export interface Employee {
+  id: string
+  company_id: string
+  name: string
+  role: string | null
+  created_at: string
+}
+
 export type TaskStatus = 'backlog' | 'in_progress' | 'resolved' | 'rejected'
 
 export interface Task {
@@ -102,6 +110,8 @@ export interface Task {
   title: string
   description: string | null
   status: TaskStatus
+  assigned_to_id: string | null
+  assigned_to_name: string | null
   created_at: string
   updated_at: string
 }

@@ -3,7 +3,8 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import Layout from '../components/Layout'
 import { useLanguage } from '../context/LanguageContext'
 import { getTasks, getTaskStats, createTask, updateTask, deleteTask } from '../api/tasks'
-import type { Task, TaskStats, TaskStatus } from '../types'
+import { getEmployees } from '../api/employees'
+import type { Task, TaskStats, TaskStatus, Employee } from '../types'
 
 const STATUS_ORDER: TaskStatus[] = ['backlog', 'in_progress', 'resolved', 'rejected']
 
@@ -61,11 +62,13 @@ export default function TasksPage() {
   const [stats, setStats] = useState<TaskStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<TaskStatus | null>(null)
+  const [employees, setEmployees] = useState<Employee[]>([])
 
   const [showCreate, setShowCreate] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
   const [newStatus, setNewStatus] = useState<TaskStatus>('backlog')
+  const [newAssignee, setNewAssignee] = useState('')
   const [creating, setCreating] = useState(false)
 
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -78,7 +81,10 @@ export default function TasksPage() {
     setStats(s)
   }
 
-  useEffect(() => { loadAll().finally(() => setLoading(false)) }, [])
+  useEffect(() => {
+    loadAll().finally(() => setLoading(false))
+    getEmployees().then(setEmployees).catch(() => {})
+  }, [])
 
   const visibleTasks = filter ? tasks.filter((t) => t.status === filter) : tasks
 
@@ -87,8 +93,8 @@ export default function TasksPage() {
     if (!newTitle.trim()) return
     setCreating(true)
     try {
-      await createTask({ title: newTitle.trim(), description: newDesc.trim() || undefined, status: newStatus })
-      setNewTitle(''); setNewDesc(''); setNewStatus('backlog'); setShowCreate(false)
+      await createTask({ title: newTitle.trim(), description: newDesc.trim() || undefined, status: newStatus, assigned_to_id: newAssignee || null })
+      setNewTitle(''); setNewDesc(''); setNewStatus('backlog'); setNewAssignee(''); setShowCreate(false)
       await loadAll()
     } finally { setCreating(false) }
   }
@@ -284,7 +290,7 @@ export default function TasksPage() {
                 rows={2}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <select
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value as TaskStatus)}
@@ -294,6 +300,18 @@ export default function TasksPage() {
                     <option key={s} value={s}>{statusLabel(s)}</option>
                   ))}
                 </select>
+                {employees.length > 0 && (
+                  <select
+                    value={newAssignee}
+                    onChange={(e) => setNewAssignee(e.target.value)}
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Unassigned</option>
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>{emp.name}{emp.role ? ` · ${emp.role}` : ''}</option>
+                    ))}
+                  </select>
+                )}
                 <button
                   type="submit"
                   disabled={creating || !newTitle.trim()}
@@ -376,7 +394,24 @@ export default function TasksPage() {
                       {task.description && (
                         <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{task.description}</p>
                       )}
-                      <p className="text-xs text-gray-400 mt-1.5">{t('taskCreated')} {relativeDate(task.created_at)}</p>
+                      <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                        <p className="text-xs text-gray-400">{t('taskCreated')} {relativeDate(task.created_at)}</p>
+                        {employees.length > 0 && (
+                          <select
+                            value={task.assigned_to_id ?? ''}
+                            onChange={(e) => updateTask(task.id, { assigned_to_id: e.target.value || null }).then(loadAll)}
+                            className="text-xs text-gray-500 border-0 bg-transparent cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400 rounded px-0"
+                          >
+                            <option value="">Unassigned</option>
+                            {employees.map((emp) => (
+                              <option key={emp.id} value={emp.id}>{emp.name}</option>
+                            ))}
+                          </select>
+                        )}
+                        {task.assigned_to_name && employees.length === 0 && (
+                          <span className="text-xs text-blue-600 font-medium">{task.assigned_to_name}</span>
+                        )}
+                      </div>
                     </div>
 
                     <select

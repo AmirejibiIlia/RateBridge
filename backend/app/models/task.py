@@ -15,7 +15,9 @@ class Task(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     # backlog | in_progress | resolved | rejected
     status: Mapped[str] = mapped_column(String(50), default="backlog", nullable=False)
+    assigned_to_id: Mapped[str | None] = mapped_column(String, ForeignKey("employees.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
     company = relationship("Company", back_populates="tasks")
+    assigned_to = relationship("Employee", back_populates="tasks")

@@ -3,6 +3,8 @@ import Layout from '../components/Layout'
 import { useLanguage } from '../context/LanguageContext'
 import { getProfile, updateProfile, updateLogo } from '../api/company'
 import { changePassword } from '../api/auth'
+import { getEmployees, createEmployee, updateEmployee, deleteEmployee } from '../api/employees'
+import type { Employee } from '../types'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -59,12 +61,52 @@ export default function AdminPage() {
   const [logoSaving, setLogoSaving] = useState(false)
   const [logoStatus, setLogoStatus] = useState<'idle' | 'saved' | 'error'>('idle')
 
+  // Employees
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [empName, setEmpName] = useState('')
+  const [empRole, setEmpRole] = useState('')
+  const [empAdding, setEmpAdding] = useState(false)
+  const [showEmpForm, setShowEmpForm] = useState(false)
+  const [editingEmp, setEditingEmp] = useState<Employee | null>(null)
+  const [editEmpName, setEditEmpName] = useState('')
+  const [editEmpRole, setEditEmpRole] = useState('')
+  const [deletingEmpId, setDeletingEmpId] = useState<string | null>(null)
+
   useEffect(() => {
     getProfile().then((c) => {
       setCompanyName(c.name)
       setCurrentLogo(c.logo_base64 ?? null)
     })
+    getEmployees().then(setEmployees).catch(() => {})
   }, [])
+
+  const handleAddEmployee = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!empName.trim()) return
+    setEmpAdding(true)
+    try {
+      const emp = await createEmployee({ name: empName.trim(), role: empRole.trim() || undefined })
+      setEmployees((prev) => [...prev, emp].sort((a, b) => a.name.localeCompare(b.name)))
+      setEmpName(''); setEmpRole(''); setShowEmpForm(false)
+    } finally { setEmpAdding(false) }
+  }
+
+  const startEditEmp = (emp: Employee) => {
+    setEditingEmp(emp); setEditEmpName(emp.name); setEditEmpRole(emp.role ?? '')
+  }
+
+  const handleSaveEmp = async () => {
+    if (!editingEmp || !editEmpName.trim()) return
+    const updated = await updateEmployee(editingEmp.id, { name: editEmpName.trim(), role: editEmpRole.trim() || undefined })
+    setEmployees((prev) => prev.map((e) => e.id === updated.id ? updated : e).sort((a, b) => a.name.localeCompare(b.name)))
+    setEditingEmp(null)
+  }
+
+  const handleDeleteEmp = async (id: string) => {
+    await deleteEmployee(id)
+    setEmployees((prev) => prev.filter((e) => e.id !== id))
+    setDeletingEmpId(null)
+  }
 
   const handleSaveName = async (e: FormEvent) => {
     e.preventDefault()
@@ -251,6 +293,116 @@ export default function AdminPage() {
               )}
             </div>
           </form>
+        </Section>
+
+        {/* Employees */}
+        <Section title="Employees">
+          <p className="text-xs text-gray-400 -mt-2">Add team members to assign tasks to them.</p>
+
+          {/* Employee list */}
+          {employees.length > 0 && (
+            <div className="space-y-2">
+              {employees.map((emp) => (
+                <div key={emp.id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                  {editingEmp?.id === emp.id ? (
+                    <>
+                      <div className="flex-1 flex gap-2">
+                        <input
+                          type="text"
+                          value={editEmpName}
+                          onChange={(e) => setEditEmpName(e.target.value)}
+                          placeholder="Name"
+                          className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          autoFocus
+                        />
+                        <input
+                          type="text"
+                          value={editEmpRole}
+                          onChange={(e) => setEditEmpRole(e.target.value)}
+                          placeholder="Role (optional)"
+                          className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <button onClick={handleSaveEmp} className="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2">Save</button>
+                      <button onClick={() => setEditingEmp(null)} className="text-xs text-gray-400 hover:text-gray-600 px-2">Cancel</button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold shrink-0">
+                        {emp.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{emp.name}</p>
+                        {emp.role && <p className="text-xs text-gray-400 truncate">{emp.role}</p>}
+                      </div>
+                      <button onClick={() => startEditEmp(emp)} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+                      {deletingEmpId === emp.id ? (
+                        <div className="flex items-center gap-1.5 bg-red-50 rounded-lg px-2 py-1">
+                          <span className="text-xs text-red-600 font-medium">Delete?</span>
+                          <button onClick={() => handleDeleteEmp(emp.id)} className="text-xs font-bold text-red-600 hover:text-red-800">✓</button>
+                          <button onClick={() => setDeletingEmpId(null)} className="text-xs text-gray-400 hover:text-gray-600">✕</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setDeletingEmpId(emp.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add employee form */}
+          {showEmpForm ? (
+            <form onSubmit={handleAddEmployee} className="space-y-2 pt-1">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={empName}
+                  onChange={(e) => setEmpName(e.target.value)}
+                  required
+                  placeholder="Full name"
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                />
+                <input
+                  type="text"
+                  value={empRole}
+                  onChange={(e) => setEmpRole(e.target.value)}
+                  placeholder="Role (optional)"
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" disabled={empAdding || !empName.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                  {empAdding ? 'Adding...' : 'Add Employee'}
+                </button>
+                <button type="button" onClick={() => { setShowEmpForm(false); setEmpName(''); setEmpRole('') }}
+                  className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button
+              onClick={() => setShowEmpForm(true)}
+              className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Add Employee
+            </button>
+          )}
         </Section>
 
         {/* Language */}

@@ -8,12 +8,14 @@ class TaskCreate(BaseModel):
     title: str
     description: str | None = None
     status: str = "backlog"
+    assigned_to_id: str | None = None
 
 
 class TaskUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
     status: str | None = None
+    assigned_to_id: str | None = None
 
 
 class TaskOut(BaseModel):
@@ -22,6 +24,8 @@ class TaskOut(BaseModel):
     title: str
     description: str | None
     status: str
+    assigned_to_id: str | None
+    assigned_to_name: str | None = None
     created_at: datetime
     updated_at: datetime
 

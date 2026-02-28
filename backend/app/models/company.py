@@ -20,3 +20,4 @@ class Company(Base):
     qr_codes = relationship("QRCode", back_populates="company")
     feedbacks = relationship("Feedback", back_populates="company")
     tasks = relationship("Task", back_populates="company")
+    employees = relationship("Employee", back_populates="company")

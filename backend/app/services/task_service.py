@@ -10,12 +10,17 @@ class TaskService:
     def __init__(self, db: Session):
         self.db = db
 
+    def _to_out(self, task: Task) -> TaskOut:
+        out = TaskOut.model_validate(task)
+        out.assigned_to_name = task.assigned_to.name if task.assigned_to else None
+        return out
+
     def list(self, company_id: str, status_filter: str | None = None) -> list[TaskOut]:
         q = self.db.query(Task).filter(Task.company_id == company_id)
         if status_filter and status_filter in VALID_STATUSES:
             q = q.filter(Task.status == status_filter)
         tasks = q.order_by(Task.created_at.desc()).all()
-        return [TaskOut.model_validate(t) for t in tasks]
+        return [self._to_out(t) for t in tasks]
 
     def create(self, company_id: str, data: TaskCreate) -> TaskOut:
         if data.status not in VALID_STATUSES:
@@ -25,11 +30,12 @@ class TaskService:
             title=data.title.strip(),
             description=data.description,
             status=data.status,
+            assigned_to_id=data.assigned_to_id or None,
         )
         self.db.add(task)
         self.db.commit()
         self.db.refresh(task)
-        return TaskOut.model_validate(task)
+        return self._to_out(task)
 
     def update(self, company_id: str, task_id: str, data: TaskUpdate) -> TaskOut:
         task = self.db.query(Task).filter(Task.id == task_id, Task.company_id == company_id).first()
@@ -43,9 +49,11 @@ class TaskService:
             if data.status not in VALID_STATUSES:
                 raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(VALID_STATUSES)}")
             task.status = data.status
+        if "assigned_to_id" in data.model_fields_set:
+            task.assigned_to_id = data.assigned_to_id or None
         self.db.commit()
         self.db.refresh(task)
-        return TaskOut.model_validate(task)
+        return self._to_out(task)
 
     def delete(self, company_id: str, task_id: str) -> None:
         task = self.db.query(Task).filter(Task.id == task_id, Task.company_id == company_id).first()
