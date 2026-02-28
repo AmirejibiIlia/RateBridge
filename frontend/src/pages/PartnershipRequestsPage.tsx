@@ -1,5 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react'
 import Layout from '../components/Layout'
+import { useLanguage } from '../context/LanguageContext'
 import {
   getPartnershipRequests,
   approvePartnershipRequest,
@@ -8,8 +9,10 @@ import {
 import type { PartnershipRequest } from '../types'
 
 export default function PartnershipRequestsPage() {
+  const { t } = useLanguage()
   const [requests, setRequests] = useState<PartnershipRequest[]>([])
   const [loading, setLoading] = useState(true)
+
 
   const [approveTarget, setApproveTarget] = useState<PartnershipRequest | null>(null)
   const [approveEmail, setApproveEmail] = useState('')
@@ -77,10 +80,10 @@ export default function PartnershipRequestsPage() {
     <Layout>
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-900">Partnership Requests</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('partnershipRequests')}</h1>
           {pending > 0 && (
             <span className="bg-blue-600 text-white text-xs font-bold px-2.5 py-0.5 rounded-full">
-              {pending} pending
+              {pending} {t('partnershipPending')}
             </span>
           )}
         </div>
@@ -94,19 +97,19 @@ export default function PartnershipRequestsPage() {
             <svg className="w-10 h-10 mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
             </svg>
-            <p className="text-sm font-medium">No partnership requests yet</p>
+            <p className="text-sm font-medium">{t('partnershipNone')}</p>
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Company</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Phone</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Submitted</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('partnershipColCompany')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('partnershipColEmail')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('partnershipColPhone')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('partnershipColStatus')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('partnershipColSubmitted')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t('partnershipColActions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -126,14 +129,14 @@ export default function PartnershipRequestsPage() {
                             onClick={() => openApproveModal(req)}
                             className="text-xs font-semibold px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                           >
-                            Register
+                            {t('partnershipRegister')}
                           </button>
                         )}
                         <button
                           onClick={() => handleDelete(req)}
                           className="text-xs font-semibold px-3 py-1.5 border border-gray-200 text-gray-500 rounded-lg hover:bg-gray-50 transition-colors"
                         >
-                          Delete
+                          {t('delete')}
                         </button>
                       </div>
                     </td>
@@ -148,10 +151,10 @@ export default function PartnershipRequestsPage() {
       {approveTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
-            <h2 className="text-lg font-bold text-gray-900 mb-1">Register Company</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">{t('partnershipModalTitle')}</h2>
             <p className="text-sm text-gray-500 mb-6">
-              Creating account for <span className="font-semibold text-gray-700">{approveTarget.company_name}</span>.
-              Set the login credentials the company will use.
+              {t('partnershipModalCreatingFor')} <span className="font-semibold text-gray-700">{approveTarget.company_name}</span>.{' '}
+              {t('partnershipModalHint')}
             </p>
             <form onSubmit={handleApprove} className="space-y-4">
               {approveError && (
@@ -160,7 +163,7 @@ export default function PartnershipRequestsPage() {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Login Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('partnershipLoginEmail')}</label>
                 <input
                   type="email"
                   value={approveEmail}
@@ -169,10 +172,10 @@ export default function PartnershipRequestsPage() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="company@example.com"
                 />
-                <p className="text-xs text-gray-400 mt-1">Pre-filled from the request, edit if needed.</p>
+                <p className="text-xs text-gray-400 mt-1">{t('partnershipEmailHint')}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('password')}</label>
                 <input
                   type="password"
                   value={approvePassword}
@@ -189,14 +192,14 @@ export default function PartnershipRequestsPage() {
                   onClick={() => setApproveTarget(null)}
                   className="flex-1 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors text-sm"
                 >
-                  Cancel
+                  {t('taskCancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={approveLoading}
                   className="flex-1 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm"
                 >
-                  {approveLoading ? 'Creating...' : 'Create Account'}
+                  {approveLoading ? t('partnershipCreating') : t('partnershipCreateAccount')}
                 </button>
               </div>
             </form>

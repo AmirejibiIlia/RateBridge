@@ -275,7 +275,7 @@ export default function AdminPage() {
                 placeholder="••••••••"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-gray-400 mt-1">Minimum 8 characters</p>
+              <p className="text-xs text-gray-400 mt-1">{t('passwordMinChars')}</p>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -296,8 +296,8 @@ export default function AdminPage() {
         </Section>
 
         {/* Employees */}
-        <Section title="Employees">
-          <p className="text-xs text-gray-400 -mt-2">Add team members to assign tasks to them.</p>
+        <Section title={t('employees')}>
+          <p className="text-xs text-gray-400 -mt-2">{t('employeesHint')}</p>
 
           {/* Employee list */}
           {employees.length > 0 && (
@@ -319,12 +319,12 @@ export default function AdminPage() {
                           type="text"
                           value={editEmpRole}
                           onChange={(e) => setEditEmpRole(e.target.value)}
-                          placeholder="Role (optional)"
+                          placeholder={t('employeeRole')}
                           className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
-                      <button onClick={handleSaveEmp} className="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2">Save</button>
-                      <button onClick={() => setEditingEmp(null)} className="text-xs text-gray-400 hover:text-gray-600 px-2">Cancel</button>
+                      <button onClick={handleSaveEmp} className="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2">{t('taskSave')}</button>
+                      <button onClick={() => setEditingEmp(null)} className="text-xs text-gray-400 hover:text-gray-600 px-2">{t('taskCancel')}</button>
                     </>
                   ) : (
                     <>
@@ -342,7 +342,7 @@ export default function AdminPage() {
                       </button>
                       {deletingEmpId === emp.id ? (
                         <div className="flex items-center gap-1.5 bg-red-50 rounded-lg px-2 py-1">
-                          <span className="text-xs text-red-600 font-medium">Delete?</span>
+                          <span className="text-xs text-red-600 font-medium">{t('employeeDelete')}</span>
                           <button onClick={() => handleDeleteEmp(emp.id)} className="text-xs font-bold text-red-600 hover:text-red-800">✓</button>
                           <button onClick={() => setDeletingEmpId(null)} className="text-xs text-gray-400 hover:text-gray-600">✕</button>
                         </div>
@@ -369,7 +369,7 @@ export default function AdminPage() {
                   value={empName}
                   onChange={(e) => setEmpName(e.target.value)}
                   required
-                  placeholder="Full name"
+                  placeholder={t('employeeFullName')}
                   className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoFocus
                 />
@@ -377,18 +377,18 @@ export default function AdminPage() {
                   type="text"
                   value={empRole}
                   onChange={(e) => setEmpRole(e.target.value)}
-                  placeholder="Role (optional)"
+                  placeholder={t('employeeRole')}
                   className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div className="flex gap-2">
                 <button type="submit" disabled={empAdding || !empName.trim()}
                   className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
-                  {empAdding ? 'Adding...' : 'Add Employee'}
+                  {empAdding ? t('employeeAdding') : t('employeeAdd')}
                 </button>
                 <button type="button" onClick={() => { setShowEmpForm(false); setEmpName(''); setEmpRole('') }}
                   className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors">
-                  Cancel
+                  {t('taskCancel')}
                 </button>
               </div>
             </form>
@@ -400,7 +400,7 @@ export default function AdminPage() {
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
-              Add Employee
+              {t('employeeAdd')}
             </button>
           )}
         </Section>

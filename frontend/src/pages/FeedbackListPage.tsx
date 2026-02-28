@@ -137,7 +137,7 @@ export default function FeedbackListPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{t('allFeedback')}</h1>
             {!loading && (
-              <p className="text-sm text-gray-400 mt-0.5">{total} {total === 1 ? 'entry' : 'entries'}{isFiltered ? ' matching filters' : ''}</p>
+              <p className="text-sm text-gray-400 mt-0.5">{total} {total === 1 ? t('feedbackEntry') : t('feedbackEntries')}{isFiltered ? ` ${t('feedbackMatchingFilters')}` : ''}</p>
             )}
           </div>
           <button
@@ -149,7 +149,7 @@ export default function FeedbackListPage() {
               ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               : <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
             }
-            Export Excel
+            {t('feedbackExportExcel')}
           </button>
         </div>
 
@@ -159,13 +159,13 @@ export default function FeedbackListPage() {
 
             {/* QR Code */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">QR Code</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('feedbackQrCode')}</label>
               <select
                 value={qrId}
                 onChange={(e) => setQrId(e.target.value)}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
-                <option value="">All locations</option>
+                <option value="">{t('feedbackAllLocations')}</option>
                 {qrCodes.map((q) => (
                   <option key={q.id} value={q.id}>{q.label}</option>
                 ))}
@@ -174,7 +174,7 @@ export default function FeedbackListPage() {
 
             {/* Rating range */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">Rating range</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('feedbackRatingRange')}</label>
               <div className="flex items-center gap-2">
                 <select
                   value={ratingMin}
@@ -200,7 +200,7 @@ export default function FeedbackListPage() {
 
             {/* Date range */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">Date range</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('feedbackDateRange')}</label>
               <div className="flex items-center gap-2">
                 <input
                   type="date"
@@ -220,16 +220,16 @@ export default function FeedbackListPage() {
 
             {/* Comment + clear */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">Comment</label>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('feedbackCommentFilter')}</label>
               <div className="flex items-center gap-2">
                 <select
                   value={hasComment}
                   onChange={(e) => setHasComment(e.target.value as '' | 'true' | 'false')}
                   className="flex-1 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 >
-                  <option value="">All</option>
-                  <option value="true">With comment</option>
-                  <option value="false">No comment</option>
+                  <option value="">{t('feedbackCommentAll')}</option>
+                  <option value="true">{t('feedbackCommentWith')}</option>
+                  <option value="false">{t('feedbackCommentWithout')}</option>
                 </select>
                 {isFiltered && (
                   <button
@@ -253,12 +253,12 @@ export default function FeedbackListPage() {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-20">
-                  <SortBtn col="rating" label="Rating" />
+                  <SortBtn col="rating" label={t('rating')} />
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">QR Name</th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Comment</th>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('qrName')}</th>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('comment')}</th>
                 <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                  <SortBtn col="date" label="Date" />
+                  <SortBtn col="date" label={t('date')} />
                 </th>
               </tr>
             </thead>
@@ -274,10 +274,10 @@ export default function FeedbackListPage() {
               ) : feedbacks.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-5 py-16 text-center text-gray-400">
-                    <p className="font-medium">No feedback found</p>
+                    <p className="font-medium">{t('feedbackNoResults')}</p>
                     {isFiltered && (
                       <button onClick={resetFilters} className="mt-2 text-sm text-blue-600 hover:underline">
-                        Clear filters
+                        {t('feedbackClearFilters')}
                       </button>
                     )}
                   </td>
@@ -313,12 +313,12 @@ export default function FeedbackListPage() {
         {!loading && totalPages > 1 && (
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-400">
-              Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
+              {t('feedbackShowing')} {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} {t('feedbackOf')} {total}
             </p>
             <div className="flex items-center gap-1">
               <button onClick={() => load(page - 1)} disabled={page === 1}
                 className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 transition-colors">
-                ← Prev
+                {t('feedbackPrev')}
               </button>
               {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                 const start = Math.max(1, Math.min(page - 2, totalPages - 4))
@@ -334,7 +334,7 @@ export default function FeedbackListPage() {
               })}
               <button onClick={() => load(page + 1)} disabled={page === totalPages}
                 className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 transition-colors">
-                Next →
+                {t('feedbackNext')}
               </button>
             </div>
           </div>

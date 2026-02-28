@@ -238,7 +238,7 @@ export default function TasksPage() {
                       <div className="mt-3 h-1 bg-gray-200 rounded-full overflow-hidden">
                         <div className={`h-full rounded-full transition-all ${c.bar}`} style={{ width: `${pct}%` }} />
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">{pct}% of total</p>
+                      <p className="text-xs text-gray-400 mt-1">{pct}% {t('taskOfTotal')}</p>
                     </button>
                   )
                 })}
@@ -306,7 +306,7 @@ export default function TasksPage() {
                     onChange={(e) => setNewAssignee(e.target.value)}
                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Unassigned</option>
+                    <option value="">{t('taskUnassigned')}</option>
                     {employees.map((emp) => (
                       <option key={emp.id} value={emp.id}>{emp.name}{emp.role ? ` · ${emp.role}` : ''}</option>
                     ))}
@@ -402,7 +402,7 @@ export default function TasksPage() {
                             onChange={(e) => updateTask(task.id, { assigned_to_id: e.target.value || null }).then(loadAll)}
                             className="text-xs text-gray-500 border-0 bg-transparent cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-400 rounded px-0"
                           >
-                            <option value="">Unassigned</option>
+                            <option value="">{t('taskUnassigned')}</option>
                             {employees.map((emp) => (
                               <option key={emp.id} value={emp.id}>{emp.name}</option>
                             ))}

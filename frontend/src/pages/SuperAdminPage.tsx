@@ -42,7 +42,7 @@ export default function SuperAdminPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard title={t('totalCompanies')} value={totalCompanies} />
           <StatsCard title={t('totalFeedback')} value={totalFeedback} />
-          <StatsCard title="Total QR Codes" value={totalQRCodes} />
+          <StatsCard title={t('totalQRCodes')} value={totalQRCodes} />
           <StatsCard
             title={t('globalAvgRating')}
             value={globalAvg != null ? globalAvg.toFixed(1) : '—'}
@@ -54,12 +54,12 @@ export default function SuperAdminPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h3 className="text-base font-semibold text-gray-700">Platform Feedback — Last 30 Days</h3>
-              <p className="text-sm text-gray-400 mt-0.5">All companies combined</p>
+              <h3 className="text-base font-semibold text-gray-700">{t('superAdminChartTitle')}</h3>
+              <p className="text-sm text-gray-400 mt-0.5">{t('superAdminChartSub')}</p>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-gray-900">{todayCount}</p>
-              <p className="text-xs text-gray-400">today</p>
+              <p className="text-xs text-gray-400">{t('superAdminToday')}</p>
             </div>
           </div>
 
